@@ -5,8 +5,8 @@
 ## Setup
 Add to your `build.gradle`:
 ```kotlin
-dependencies {
-  implementation(project(":compose")) // see the repo's app's settings.gradle for the moment, the library version is coming soon
+dependencies { 
+    implementation(project(":compose")) // see the repo's app's settings.gradle for the moment, the library version is coming soon
 }
 ```
 
@@ -94,7 +94,7 @@ fun ChemicalFormula() {
 
 **Output**: The text "H₂SO₄" is white with a dark gray background, 16sp font size, and subscripted.
 
-![Chemical Formula Output](https://example.com/chemical_formula.png)
+![Chemical Formula Output](../demo_files/chemical_formula.png)
 *Image Description*: The text "H₂SO₄" appears in white on a dark gray background, with all characters in a 16sp font size and subscripted, resembling a chemical formula.
 
 ### Example 2: Styling the First Occurrence with setOccurrenceChunks
