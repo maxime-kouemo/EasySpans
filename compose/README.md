@@ -132,7 +132,7 @@ fun FirstWordStyled() {
 
 **Output**: The first "Hello" is red and underlined; the rest is black.
 
-![First Word Styled Output](https://example.com/first_word_styled.png)
+![First Word Styled Output](../demo_files/first_word_styled.png)
 *Image Description*: The text "Hello World! Hello Compose!" is displayed, with "Hello" in red and underlined, and the remaining text in black.
 
 ### Example 3: Clickable Text with Multiple addOccurrenceChunk and Uppercase Transformation
@@ -209,7 +209,7 @@ fun ClickableWords() {
 
 **Output**: "here" is blue and clickable, "THERE" is green, uppercase, and clickable, "now" is red and clickable, all underlined. Clicking each word prints its tag and item (e.g., "Clicked on: THERE (tag: click_there)").
 
-![Clickable Words Output](https://example.com/clickable_words.png)
+![Clickable Words Output](../demo_files/clickable_words.png)
 *Image Description*: The text "Click here, THERE, or now!" is displayed, with "here" in blue and underlined, "THERE" in green, uppercase, and underlined, "now" in red and underlined, and the rest in black. Clicking "here", "THERE", or "now" triggers a console log with the respective tag and item.
 
 ### Example 4: Text Case Transformation with Nth Occurrence
@@ -242,7 +242,7 @@ fun UppercaseNthWord() {
 
 **Output**: The text is uppercase ("HELLO WORLD! HELLO COMPOSE!"), with "WORLD!" in magenta on a yellow background.
 
-![Uppercase Nth Word Output](https://example.com/uppercase_nth_word.png)
+![Uppercase Nth Word Output](../demo_files/uppercase_nth_word.png)
 *Image Description*: The text "HELLO WORLD! HELLO COMPOSE!" is displayed in uppercase, with "WORLD!" in magenta on a yellow background and the rest in black.
 
 ### Example 5: Styling Multiple Segments with Mixed Delimiters
@@ -288,7 +288,7 @@ fun MixedDelimiterStyles() {
 
 **Output**: The words "The" and "the" (indices 0 and 4 with boundary " ") are red and underlined, while "cat" and "dog" (regex matches) have a cyan background, with overlapping styles applied where relevant.
 
-![Mixed Delimiter Styles Output](https://example.com/mixed_delimiter_styles.png)
+![Mixed Delimiter Styles Output](../demo_files/mixed_delimiter_styles.png)
 *Image Description*: The text "The cat runs, the dog jumps." is displayed, with "The" and "the" in red and underlined, "cat" and "dog" on a cyan background, and the rest in black. Where styles overlap (e.g., "cat"), both red/underline and cyan background are visible.
 
 ### Example 6: Styling Monetary Values with Regex
@@ -326,7 +326,7 @@ fun MonetaryValuesStyled() {
 
 **Output**: Monetary values "$5.50", "5,50 $", "$5", and "5 $" are bold and red; the rest of the text is black.
 
-![Monetary Values Output](https://example.com/monetary_values.png)
+![Monetary Values Output](../demo_files/monetary_values.png)
 *Image Description*: The text "The item costs $5.50. L'article coûte 5,50 $. Prices are $5 or 5 $." is displayed, with "$5.50", "5,50 $", "$5", and "5 $" in bold red, and the remaining text in black.
 
 ## EasySpansClickableText
@@ -442,7 +442,7 @@ fun SampleClickableTextScreen() {
 
 **Output**: The text "Click here, THERE, or now!" is displayed, with "here" in blue, "THERE" in green and uppercase, and "now" in red, all underlined. Tapping each word shows a toast with the item and tag (e.g., "Clicked on: THERE (tag: click_there)").
 
-![Sample Clickable Text Output](https://example.com/sample_clickable_text.png)
+![Sample Clickable Text Output](../demo_files/sample_clickable_text.png)
 *Image Description*: The text "Click here, THERE, or now!" is centered with "here" in blue, "THERE" in green and uppercase, and "now" in red, all underlined. A toast appears when tapping a word, showing the clicked item and tag.
 
 ## API Overview
@@ -475,8 +475,8 @@ fun SampleClickableTextScreen() {
 - **Delimiter Handling**: Non-existent delimiters result in no styling, ensuring robust behavior (e.g., no accidental styling of the entire text).
 - **API Flexibility**: Use `addOccurrenceChunk` for incremental chunk addition or `setOccurrenceChunks` for bulk configuration.
 - **Text Transformations**: Per-chunk `textTransform` (e.g., `{ it.uppercase() }`) allows fine-grained control, as seen in `ClickableWords` where "there" becomes "THERE".
-- **Package**: Available in `com.mamboa.easyspanscompose`, distinct from the original `EasySpans` in `com.mamboa.easyspans`.
-- **Images**: The placeholder image URLs (e.g., `https://example.com/chemical_formula.png`) should be replaced with actual image paths in your project repository or hosting service. For example, if using GitHub, place images in a folder like `docs/images/` and update links to `https://github.com/your-repo/easyspanscompose/raw/main/docs/images/chemical_formula.png`.
+- **Package**: Available in `com.mamboa.easyspans.compose`, distinct from the original `EasySpans` in `com.mamboa.easyspans.legacy`.
+
 
 ### Unit Tests for Further Details
 
