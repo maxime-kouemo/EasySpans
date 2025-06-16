@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="test_no_dp">0dp</dimen>
+    <dimen name="test_default_text_size">20sp</dimen>
+    <dimen name="test_text_size">30sp</dimen>
+    <dimen name="test_background_padding">5dp</dimen>
+</resources>
