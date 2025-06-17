@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.maven.publish)
 }
+val currentGroupId = "com.mamboa.easyspans"
+val currentVersion = "1.0.0"
 
 android {
     namespace = "com.mamboa.easyspans.compose"
@@ -58,9 +60,6 @@ dependencies {
 
 // Publishing configuration
 afterEvaluate { // Using afterEvaluate is common for publishing Android components
-    val currentGroupId = "com.mamboa.easyspans"
-    val currentVersion = "1.0.0"
-
     publishing {
         publications {
             create<MavenPublication>("release") { // It's good practice to explicitly name the publication type
