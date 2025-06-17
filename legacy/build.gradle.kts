@@ -54,37 +54,20 @@ dependencies {
 
 // Publishing configuration
 afterEvaluate { // Using afterEvaluate is common for publishing Android components
+    val currentGroupId = "com.mamboa.easyspans"
+    val currentVersion = "1.0.0"
+
     publishing {
         publications {
             create<MavenPublication>("release") { // It's good practice to explicitly name the publication type
-                groupId = "com.mamboa.easyspans"
+                groupId = currentGroupId
                 artifactId = "legacy"
-                version = "1.0"
+                version = currentVersion
 
                 // This tells Gradle to publish the outputs of the 'release' component
                 // (typically the AAR file for an Android library)
                 from(components["release"])
-
-                // Optional: Add sources and Javadoc JARs
-                // pom.withXml {
-                //     val dependenciesNode = asNode().appendNode("dependencies")
-                //     configurations.implementation.get().allDependencies.forEach {
-                //         if (it.group != null && it.name != null && it.version != null) {
-                //             val dependencyNode = dependenciesNode.appendNode("dependency")
-                //             dependencyNode.appendNode("groupId", it.group)
-                //             dependencyNode.appendNode("artifactId", it.name)
-                //             dependencyNode.appendNode("version", it.version)
-                //         }
-                //     }
-                // }
             }
         }
-        // Optional: Configure repositories to publish to
-        // repositories {
-        //     maven {
-        //         name = "MyRepo"
-        //         url = uri("file://${buildDir}/repo") // Example: local repository
-        //     }
-        // }
     }
 }
