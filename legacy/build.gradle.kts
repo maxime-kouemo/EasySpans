@@ -34,12 +34,12 @@ android {
 
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 
     composeOptions {
@@ -75,10 +75,12 @@ afterEvaluate { // Using afterEvaluate is common for publishing Android componen
                 name = "JitPack"
                 url = uri("https://jitpack.io")
                 credentials {
-                    username = ((project.findProperty("jitpackUsername")
-                        ?: System.getenv("jitpackUsername")).toString())
-                    password = (project.findProperty("jitpackToken")
-                        ?: System.getenv("jitpackToken")).toString()
+                    username =
+                        (project.findProperty("jitpackUsername") ?: System.getenv("jitpackUsername")
+                        ?: "").toString()
+                    password =
+                        (project.findProperty("jitpackToken") ?: System.getenv("jitpackToken")
+                        ?: "").toString()
                 }
             }
         }
