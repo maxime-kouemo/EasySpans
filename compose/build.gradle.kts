@@ -73,12 +73,17 @@ afterEvaluate { // Using afterEvaluate is common for publishing Android componen
                 from(components["release"])
             }
         }
-        // Optional: Configure repositories to publish to
-        // repositories {
-        //     maven {
-        //         name = "MyRepo"
-        //         url = uri("file://${buildDir}/repo") // Example: local repository
-        //     }
-        // }
+        repositories {
+            maven {
+                name = "JitPack"
+                url = uri("https://jitpack.io")
+                credentials {
+                    username = ((project.findProperty("jitpackUsername")
+                        ?: System.getenv("jitpackUsername")).toString())
+                    password = (project.findProperty("jitpackToken")
+                        ?: System.getenv("jitpackToken")).toString()
+                }
+            }
+        }
     }
 }
