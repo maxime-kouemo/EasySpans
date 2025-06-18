@@ -1,12 +1,27 @@
 # EasySpansCompose
 
+[![JitPack](https://jitpack.io/v/maxime-kouemo/EasySpans.svg)](https://jitpack.io/#maxime-kouemo/EasySpans)
+[![Supports Jetpack Compose](https://img.shields.io/badge/UI%20Toolkit-Jetpack%20Compose-green.svg)](https://developer.android.com/compose)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 `EasySpansCompose` is a Jetpack Compose library that simplifies the creation of styled and annotated text, inspired by the original `EasySpans` library. It provides a fluent builder API to apply global and occurrence-specific styles to text, supporting delimiters (boundary strings or regex), clickable annotations, text transformations (e.g., uppercase), and advanced styling options like superscript/subscript and background colors.
 
 ## Setup
 Add to your `build.gradle`:
 ```kotlin
 dependencies { 
-    implementation(project(":compose")) // see the repo's app's settings.gradle for the moment, the library version is coming soon
+    implementation("com.github.maxime-kouemo.EasySpans:compose:1.0.0") // temporary, will be moved to maven central
+}
+```
+Add the Maven repository to your `settings.gradle`:
+```kotlin
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") } // For EasySpansCompose
+    }
 }
 ```
 
@@ -486,7 +501,7 @@ For issues, feature requests, or contributions, refer to the project repository 
 
 ## License
 ```
-   Copyright 2025 mamboa
+   Copyright 2025 by Maxime Kouemo
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

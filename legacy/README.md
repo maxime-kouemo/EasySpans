@@ -1,12 +1,27 @@
 # EasySpans
 
+[![JitPack](https://jitpack.io/v/maxime-kouemo/EasySpans.svg)](https://jitpack.io/#maxime-kouemo/EasySpans)
+[![Supports Android Views](https://img.shields.io/badge/Platform-Android%20Views-blue.svg)](https://developer.android.com/develop/ui/views/layout/declaring-layout)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 The `EasySpans` library provides a flexible and chainable API for applying Android text spans to `TextView` widgets. It supports global and localized span application, including custom spans, regex-based targeting, delimiter-based targeting, and clickable links. This documentation includes examples for common use cases, as well as examples adapted from the `EasySpansCompose` library, reimplemented for the legacy `EasySpans` API. The content is informed by the provided unit tests for robustness and clarity.
 
 ## Setup
 Add to your `build.gradle`:
 ```kotlin
-dependencies {
-    implementation(project(":legacy")) // see the repo's app's settings.gradle for the moment, the library version is coming soon
+dependencies { 
+    implementation("com.github.maxime-kouemo.EasySpans:legacy:1.0.0") 
+}
+```
+Add the Maven repository to your `settings.gradle`:
+```kotlin
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") } // For EasySpans
+  }
 }
 ```
 
@@ -546,7 +561,7 @@ For issues, feature requests, or contributions, refer to the project repository 
 
 ## License
 ```
-   Copyright 2025 mamboa
+   Copyright 2025 by Maxime Kouemo
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
