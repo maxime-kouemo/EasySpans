@@ -1,6 +1,5 @@
 package com.mamboa.easyspans.compose
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
@@ -181,7 +180,7 @@ class EasySpansComposeBuilder private constructor(
         baseStyle = buildGlobalSpanStyle()
         val processedOccurrenceChunks = occurrenceChunks.map { chunk ->
             if (textCase != null && chunk.occurrenceLocation.delimitationType is DelimitationType.Regex) {
-                val originalRegexDelimitation = chunk.occurrenceLocation.delimitationType as DelimitationType.Regex
+                val originalRegexDelimitation = chunk.occurrenceLocation.delimitationType
                 val updatedRegex = Regex(originalRegexDelimitation.pattern, RegexOption.IGNORE_CASE)
                 chunk.copy(
                     occurrenceLocation = chunk.occurrenceLocation.copy(
@@ -354,7 +353,6 @@ class EasySpansComposeBuilder private constructor(
  * @param builder A lambda to configure the EasySpansComposeBuilder.
  * @return An AnnotatedString with the applied styles and spans.
  */
-@Composable
 fun EasySpansCompose(
     text: String,
     builder: EasySpansComposeBuilder.() -> Unit
