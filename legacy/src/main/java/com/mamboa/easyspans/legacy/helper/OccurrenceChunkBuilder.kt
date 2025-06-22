@@ -203,9 +203,9 @@ class OccurrenceChunkBuilder {
     }
 
     fun addSpan(span: (Any) -> Any) = apply {
-        when (val result = span(Any())) {
-            is CharacterStyle -> addACharacterSpan { _ -> result as CharacterStyle }
-            is ParagraphStyle -> addAParagraphSpan { _ -> result as ParagraphStyle }
+        when (span(Any())) {
+            is CharacterStyle -> addACharacterSpan(span as (Any) -> CharacterStyle)
+            is ParagraphStyle -> addAParagraphSpan(span as (Any) -> ParagraphStyle)
             else -> throw IllegalArgumentException("Span must produce a CharacterStyle or ParagraphStyle")
         }
     }

@@ -3,11 +3,14 @@ package com.mamboa.easyspans.legacy.helper
 import android.content.Context
 import android.os.Build
 import android.text.style.CharacterStyle
+import android.text.style.ClickableSpan
 import android.text.style.ParagraphStyle
 import android.text.style.SubscriptSpan
 import android.text.style.SuperscriptSpan
+import android.text.style.URLSpan
 import android.widget.TextView
 import com.mamboa.easyspans.legacy.EasySpans
+import com.mamboa.easyspans.legacy.customspans.ClickableLinkSpan
 import com.mamboa.easyspans.legacy.customspans.TextCaseSpan
 import com.mamboa.easyspans.legacy.styling.SpanFactory
 import java.util.UUID
@@ -140,7 +143,7 @@ class OccurrenceChunk(
             }
 
             // Only remove conflicting color if ClickableLinkSpan uses its own color
-            if (_characterStyleSpans.containsKey(EasySpans.Config.CLICKABLE_LINK_TAG) && color == EasySpans.Config.ID_NULL) {
+            if (_characterStyleSpans.containsKey(EasySpans.Config.CLICKABLE_LINK_TAG) && color != EasySpans.Config.ID_NULL) {
                 _characterStyleSpans.remove(EasySpans.Config.COLOR_TAG)
             }
             // Always remove underline if ClickableLinkSpan is applied to avoid duplication
@@ -150,6 +153,14 @@ class OccurrenceChunk(
 
             // add all custom character styles to the map if any
             customCharacterStyles?.forEach { value ->
+                val sampleSpan = try {
+                    value(Any())
+                } catch (e: Exception) {
+                    throw IllegalArgumentException("Invalid custom character style: ${e.message}")
+                }
+                if (sampleSpan is ClickableLinkSpan || sampleSpan is ClickableSpan || sampleSpan is URLSpan) {
+                    throw IllegalArgumentException("Custom character styles cannot include ClickableLinkSpan or URLSpan. Use OccurrenceChunkBuilder.setOnLinkClickListener for clickable behavior.")
+                }
                  val key = UUID.randomUUID().toString()
                 _characterStyleSpans[key] = value
             }

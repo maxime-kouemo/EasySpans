@@ -1122,22 +1122,20 @@ class EasySpansComposeTest {
     fun testClickableLinkDefaultBuilderStyles() {
         val regex = "tempus"
         val occurrenceBoundaries = Utils.getRegexMatchRanges(text, Regex(regex))
-        val annotatedString = EasySpansComposeBuilder.create(text)
-            .apply {
-                setColor(teal_700)
-                setTextDecoration(TextDecoration.Underline)
-                setFontSize(test_default_text_size)
-                addOccurrenceChunk(
-                    occurrenceChunk(
-                        occurrenceLocation = OccurrenceLocation(
-                            delimitationType = DelimitationType.Regex(regex),
-                            occurrencePosition = OccurrencePosition.First
-                        ),
-                        onClickTag = "clickable"
-                    )
+        val annotatedString = EasySpansCompose(text) {
+            setColor(teal_700)
+            setTextDecoration(TextDecoration.Underline)
+            setFontSize(test_default_text_size)
+            addOccurrenceChunk(
+                occurrenceChunk(
+                    occurrenceLocation = OccurrenceLocation(
+                        delimitationType = DelimitationType.Regex(regex),
+                        occurrencePosition = OccurrencePosition.First
+                    ),
+                    onClickTag = "clickable"
                 )
-            }
-            .build()
+            )
+        }
 
         assertTrue(occurrenceBoundaries.isNotEmpty())
         val expectedStart = occurrenceBoundaries[0].first
@@ -1739,7 +1737,7 @@ class EasySpansComposeTest {
     }
 
     @Test
-    fun `test addSpan with base SpanStyle overrides all other properties`() {
+    fun `test addSpan with base SpanStyle overrides non-color properties`() {
         val result = EasySpansCompose("Test Text") {
             setColor(Color.Red)
             setFontSize(16.sp)
@@ -1753,9 +1751,9 @@ class EasySpansComposeTest {
         }
 
         val spanStyle = result.spanStyles[0].item
-        assertEquals(Color.Blue, spanStyle.color)
-        assertEquals(20.sp, spanStyle.fontSize)
-        assertEquals(FontWeight.Bold, spanStyle.fontWeight)
+        assertEquals(Color.Red, spanStyle.color) // Expect Color.Red from setColor
+        assertEquals(16.sp, spanStyle.fontSize) // Expect override from setSpanStyle
+        assertEquals(FontWeight.Bold, spanStyle.fontWeight) // Expect override from setSpanStyle
     }
 
     @Test
@@ -1800,5 +1798,52 @@ class EasySpansComposeTest {
         assertEquals(20.sp, spanStyle.fontSize)
         assertEquals(FontWeight.Bold, spanStyle.fontWeight)
         assertEquals(TextDecoration.Underline, spanStyle.textDecoration)
+    }
+
+    @Test
+    fun `test setOccurrenceLocation applies style to first regex match`() {
+        val testText = "foo bar foo"
+        val regex = "\\bfoo\\b"
+        val boundaries = Utils.getRegexMatchRanges(testText, Regex(regex))
+        assertTrue(boundaries.isNotEmpty())
+
+        val annotatedString = EasySpansCompose(testText) {
+            setOccurrenceLocation(
+                OccurrenceLocation(
+                    delimitationType = DelimitationType.Regex(regex),
+                    occurrencePosition = OccurrencePosition.First
+                )
+            )
+            setColor(Color.Magenta)
+            setFontWeight(FontWeight.Bold)
+        }
+
+        val spanStyles = annotatedString.spanStyles
+        val first = boundaries[0]
+        assertEquals(1, spanStyles.count { it.start == first.first && it.end == first.last + 1 && it.item.color == Color.Magenta && it.item.fontWeight == FontWeight.Bold })
+    }
+
+    @Test
+    fun `test setOccurrenceLocation applies style to all matches`() {
+        val testText = "alpha beta alpha beta"
+        val regex = "\\balpha\\b"
+        val boundaries = Utils.getRegexMatchRanges(testText, Regex(regex))
+        assertEquals(2, boundaries.size)
+
+        val annotatedString = EasySpansCompose(testText) {
+            setOccurrenceLocation(
+                OccurrenceLocation(
+                    delimitationType = DelimitationType.Regex(regex),
+                    occurrencePosition = OccurrencePosition.All
+                )
+            )
+            setColor(Color.Cyan)
+            setTextDecoration(TextDecoration.Underline)
+        }
+
+        val spanStyles = annotatedString.spanStyles
+        for (range in boundaries) {
+            assertEquals(1, spanStyles.count { it.start == range.first && it.end == range.last + 1 && it.item.color == Color.Cyan && it.item.textDecoration == TextDecoration.Underline })
+        }
     }
 }

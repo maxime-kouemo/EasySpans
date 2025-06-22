@@ -1,10 +1,19 @@
 package com.mamboa
 
+import android.graphics.BlurMaskFilter
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.MaskFilterSpan
+import android.text.style.StrikethroughSpan
+import android.text.style.SuperscriptSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -54,7 +63,6 @@ class FirstFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         test1()
 
         binding.buttonFirst.setOnClickListener {
@@ -67,7 +75,9 @@ class FirstFragment : Fragment() {
         val trader = "Trader"
         val tempus = "tempus"
         val regex4 = "turpis"
+        val blurMask =  BlurMaskFilter(5f, BlurMaskFilter.Blur.NORMAL)
 
+        Log.d("EasySpans", "Input text: $text")
         binding.textviewFirst.text =
             EasySpans.Builder(requireContext(), text, binding.textviewFirst)
                 .setOccurrenceLocation(
@@ -105,10 +115,16 @@ class FirstFragment : Fragment() {
                     OccurrenceChunk(
                         location = OccurrenceLocation(
                             DelimitationType.REGEX(tempus),
-                            OccurrencePosition.First
+                            OccurrencePosition.All // OccurrencePosition.All
                         ),
                         builder = OccurrenceChunkBuilder()
                             .setColor(android.R.color.holo_red_dark)
+//                            .isStrikeThrough()
+//                            .setScriptType(com.mamboa.easyspans.legacy.helper.ScriptType.SUPER)
+                            //.addSpan { ForegroundColorSpan(ContextCompat.getColor(this@FirstFragment.requireContext(), android.R.color.holo_red_dark)) }
+                            .addSpan { StrikethroughSpan() }
+                            .addSpan { SuperscriptSpan() }
+                            .addSpan { MaskFilterSpan(blurMask) }
                             .setOnLinkClickListener(
                                 object : ClickableLinkSpan.OnLinkClickListener {
                                     override fun onLinkClick(view: View) {
@@ -150,10 +166,10 @@ class FirstFragment : Fragment() {
                              .setTextSize(R.dimen.test_text_size)
                              .setTextStyle(Typeface.BOLD)
                              //.setScriptType(ScriptType.SUPER)
-                             .setFont(R.font.ocean_summer)
+//                             .setFont(com.mamboa.easyspans.legacy.R.font.ocean_summer)
                              .setColor(R.color.purple_500)
                              .setChunkBackgroundColor(R.color.teal_700)
-                             .setTextCaseType(TextCaseSpan.TextCaseType.UPPER_CASE)
+                             .setTextCaseType(TextCaseSpan.TextCaseType.LOWER_CASE)
                              /*.setParagraphBackgroundColor(
                                  SequenceBackgroundColor(
                                      backgroundColor = R.color.purple_700,
@@ -207,7 +223,7 @@ class FirstFragment : Fragment() {
 //                .setChunkBackgroundColor(R.color.teal_200)
 //                .setTextStyle(Typeface.BOLD)
                 .setTextSize(R.dimen.test_default_text_size)
-                .setFont(R.font.ocean_summer)
+//                .setFont(R.font.ocean_summer)
                 .build()
                 .create()
     }
