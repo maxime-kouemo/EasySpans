@@ -10,6 +10,7 @@ import android.widget.TextView
 import com.mamboa.easyspans.legacy.EasySpans
 import com.mamboa.easyspans.legacy.customspans.TextCaseSpan
 import com.mamboa.easyspans.legacy.styling.SpanFactory
+import java.util.UUID
 
 /**
  * Represents a rich occurrence styling chunk, with configuration for spans and link handling.
@@ -42,6 +43,7 @@ class OccurrenceChunk(
     /**
      * Builds the occurrence chunk by applying the styles and spans defined in the builder.
      * @param context the context used to access resources
+     * @param targetTextView the TextView to which the styles will be applied
      */
     fun build(context: Context, targetTextView: TextView?) {
 
@@ -117,7 +119,7 @@ class OccurrenceChunk(
                 targetTextView?.let { textView ->
                     _paragraphStyleSpans[EasySpans.Config.BACKGROUND_PARAGRAPH_TAG] =
                         { spanFactory.createBackgroundParagraphStyle(backgroundColor, textView) }
-                } ?: throw IllegalStateException(
+                } ?: throw NullPointerException(
                     "targetTextView must be provided when paragraphBackgroundColor is set"
                 )
             }
@@ -132,30 +134,31 @@ class OccurrenceChunk(
                             listener
                         )
                     }
-                } ?: throw IllegalStateException(
+                } ?: throw NullPointerException(
                     "targetTextView must be provided when onLinkClickListener is set"
                 )
             }
 
-            // Remove conflicting color/underline if clickable link is applied
+            // Only remove conflicting color if ClickableLinkSpan uses its own color
+            if (_characterStyleSpans.containsKey(EasySpans.Config.CLICKABLE_LINK_TAG) && color == EasySpans.Config.ID_NULL) {
+                _characterStyleSpans.remove(EasySpans.Config.COLOR_TAG)
+            }
+            // Always remove underline if ClickableLinkSpan is applied to avoid duplication
             if (_characterStyleSpans.containsKey(EasySpans.Config.CLICKABLE_LINK_TAG)) {
-                _characterStyleSpans.remove(EasySpans.Config.COLOR_TAG)
                 _characterStyleSpans.remove(EasySpans.Config.UNDERLINED_TAG)
             }
 
-            /*paragraphBackgroundColor?.let { backgroundColor ->
-                _paragraphStyleSpans[EasySpans.Config.BACKGROUND_PARAGRAPH_TAG] =
-                    { spanFactory.createBackgroundParagraphStyle(backgroundColor, targetTextView) }
+            // add all custom character styles to the map if any
+            customCharacterStyles?.forEach { value ->
+                 val key = UUID.randomUUID().toString()
+                _characterStyleSpans[key] = value
             }
 
-            if (onLinkClickListener != null) {
-                _characterStyleSpans[EasySpans.Config.CLICKABLE_LINK_TAG] = {
-                    spanFactory.createClickableLinkSpan(this@OccurrenceChunk, color, isUnderlined)
-                }
-                // Remove conflicting color/underline, handled by ClickableLinkSpan
-                _characterStyleSpans.remove(EasySpans.Config.COLOR_TAG)
-                _characterStyleSpans.remove(EasySpans.Config.UNDERLINED_TAG)
-            }*/
+            // add all custom paragraph styles to the map if any
+            customParagraphStyles?.forEach { value ->
+                val key = UUID.randomUUID().toString()
+                _paragraphStyleSpans[key] = value
+            }
         }
     }
 

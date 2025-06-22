@@ -8,6 +8,7 @@ import android.text.style.LineBackgroundSpan
 import android.view.Gravity
 import android.view.View
 import java.util.*
+import androidx.core.text.layoutDirection
 
 /*
  * When trying to put a background color on the text only within textview, there is no padding. This
@@ -33,7 +34,7 @@ class PaddingBackgroundColorSpan(private val mBackgroundColor: Int, private val 
 
         val finalTop = top - if (lnum == 0) mPadding / 2 else -(mPadding / 2)
         val finalBottom = bottom + mPadding / 2
-        val isLeftToRight = TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_LTR
+        val isLeftToRight = Locale.getDefault().layoutDirection == View.LAYOUT_DIRECTION_LTR
         // Draw the background
         backgroundRect.set(when {
             gravity == Gravity.LEFT || (isLeftToRight &&  gravity == Gravity.START) || (!isLeftToRight &&  gravity == Gravity.END) -> getLeftRect(left, finalTop, right, finalBottom, textWidth)

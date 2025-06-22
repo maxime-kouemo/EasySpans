@@ -6,8 +6,8 @@ import android.view.View
 import androidx.annotation.ColorInt
 
 class ClickableLinkSpan (@ColorInt private val linkColor: Int,
-                         private val isLinkUnderLine: Boolean = true,
-                         private val onLinkClickedListener: OnLinkClickListener?) : ClickableSpan() {
+                              private val isLinkUnderLine: Boolean = true,
+                              private val onLinkClickedListener: OnLinkClickListener?) : ClickableSpan() {
 
     override fun updateDrawState(ds: TextPaint) {
         super.updateDrawState(ds)

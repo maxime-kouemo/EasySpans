@@ -7,11 +7,12 @@ import android.view.ViewGroup
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,13 +31,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
+import com.mamboa.easyspans.compose.DashPattern
+import com.mamboa.easyspans.compose.DashedDecorationText
 import com.mamboa.easyspans.compose.DelimitationType
-import com.mamboa.easyspans.compose.EasySpansClickableText
 import com.mamboa.easyspans.compose.EasySpansCompose
 import com.mamboa.easyspans.compose.OccurrenceLocation
 import com.mamboa.easyspans.compose.OccurrencePosition
 import com.mamboa.easyspans.compose.ScriptType
 import com.mamboa.easyspans.compose.occurrenceChunk
+import com.mamboa.easyspans.compose.RoundedBackgroundText
 
 class SecondFragment : Fragment() {
 
@@ -72,13 +75,14 @@ class SecondFragment : Fragment() {
                     item {
                         ClickableWords()
                     }
-                    /*
+
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                     item {
                         UppercaseNthWord()
                     }
+                    /*
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -160,7 +164,18 @@ fun FirstWordStyled() {
 
 @Composable
 fun ClickableWords() {
-    val annotatedString = EasySpansCompose("Click here, there, or now!") {
+    RoundedBackgroundText(
+        text = "Hello World! Hello Compose!\nHello World! Hello Compose!\nHello World! Hello Compose!",
+        backgroundColor = Color.Blue.copy(alpha = 0.5f),
+        cornerRadius = 8.dp,
+        horizontalPadding = 4.dp,
+        verticalPadding = 6.dp,
+        occurrenceLocation = OccurrenceLocation(
+            delimitationType = DelimitationType.Boundary(" "),
+            occurrencePosition = OccurrencePosition.Last
+        )
+    )
+    /*val annotatedString = EasySpansCompose("Click here, there, or now!") {
         setColor(Color.Black)
         setOccurrenceChunks(
             occurrenceChunk(
@@ -217,12 +232,27 @@ fun ClickableWords() {
             }
         },
         style = MaterialTheme.typography.bodyLarge,
-    )
+    )*/
 }
 
 @Composable
 fun UppercaseNthWord() {
-    val annotatedString = EasySpansCompose("hello world! hello compose!") {
+    DashedDecorationText(
+        text = "Hello World! This is a test.",
+        dashedUnderline = true,
+        dashedStrikethrough = true,
+        dashPattern = DashPattern.DASH_DOT,
+        dashWidth = 4.dp,
+        dashGap = 2.dp,
+        lineColor = Color.Blue,
+        lineThickness = 1.dp,
+        occurrenceLocation = OccurrenceLocation(
+            delimitationType = DelimitationType.Boundary(" "),
+            occurrencePosition = OccurrencePosition.First
+        )
+    )
+
+    /*val annotatedString = EasySpansCompose("hello world! hello compose!") {
         setTextCase { it.uppercase() }
         setColor(Color.Black)
         addOccurrenceChunk(
@@ -235,7 +265,7 @@ fun UppercaseNthWord() {
             )
         )
     }
-    Text(text = annotatedString)
+    Text(text = annotatedString)*/
 }
 
 @Composable

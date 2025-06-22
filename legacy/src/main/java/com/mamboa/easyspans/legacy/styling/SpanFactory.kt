@@ -174,8 +174,11 @@ class SpanFactory(private val context: Context) {
      */
     fun createBackgroundParagraphStyle(
         sequenceBackgroundColor: SequenceBackgroundColor,
-        targetTextView: TextView
+        targetTextView: TextView?
     ): ParagraphStyle {
+        if (targetTextView == null) {
+            throw NullPointerException("targetTextView must be provided when paragraphBackgroundColor is set")
+        }
         val colorValue = ContextCompat.getColor(context, sequenceBackgroundColor.backgroundColor)
         @DimenRes val paddingID =
             if (sequenceBackgroundColor.padding != ID_NULL) sequenceBackgroundColor.padding else R.dimen.test_no_dp
@@ -250,7 +253,7 @@ class SpanFactory(private val context: Context) {
     companion object {
         private const val ID_NULL = 0
 
-        fun SpannableStringBuilder.applyTextCaseOnTextSection(
+        private fun SpannableStringBuilder.applyTextCaseOnTextSection(
             start: Int,
             end: Int,
             textCaseType: TextCaseSpan.TextCaseType = TextCaseSpan.TextCaseType.NORMAL
@@ -272,7 +275,7 @@ class SpanFactory(private val context: Context) {
             startIndex: Int,
             endIndex: Int,
         )  {
-            if (tag == EasySpans.Config.TEXT_CASE_TYPE_TAG) {
+            if (tag == EasySpans.Config.TEXT_CASE_TYPE_TAG || span is TextCaseSpan) {
                 this.applyTextCaseOnTextSection(
                     startIndex,
                     endIndex,
