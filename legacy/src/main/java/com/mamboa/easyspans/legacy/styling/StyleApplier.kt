@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.TextView
 import com.mamboa.easyspans.legacy.EasySpans
 import com.mamboa.easyspans.legacy.customspans.ClickableLinkSpan
+import com.mamboa.easyspans.legacy.customspans.PaddingBackgroundColorSpan
 import com.mamboa.easyspans.legacy.customspans.TextCaseSpan
 import com.mamboa.easyspans.legacy.helper.DelimitationType
 import com.mamboa.easyspans.legacy.helper.OccurrenceChunk
@@ -133,13 +134,21 @@ class StyleApplier(
             } catch (e: Exception) {
                 throw IllegalArgumentException("Invalid custom character style: ${e.message}")
             }
-            if (sampleSpan is ClickableLinkSpan || sampleSpan is ClickableSpan || sampleSpan is URLSpan) {
+            if (sampleSpan is ClickableLinkSpan || sampleSpan is ClickableSpan) {
                 throw IllegalArgumentException("Custom character styles cannot include ClickableLinkSpan or URLSpan. Use OccurrenceChunkBuilder.setOnLinkClickListener for clickable behavior.")
             }
             val key = UUID.randomUUID().toString()
             mapOfCharacterStyleSpans[key] = value
         }
         config.customParagraphStyles?.forEach { value ->
+            val sampleSpan = try {
+                value(Any())
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Invalid custom paragraph style: ${e.message}")
+            }
+            if (sampleSpan is PaddingBackgroundColorSpan && targetTextView == null) {
+                throw NullPointerException("targetTextView must be provided when using PaddingBackgroundColorSpan in custom paragraph styles.")
+            }
             val key = UUID.randomUUID().toString()
             mapOfParagraphStyleSpans[key] = value
         }

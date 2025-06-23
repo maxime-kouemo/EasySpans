@@ -13,11 +13,16 @@ import com.mamboa.easyspans.legacy.EasySpans
 import com.mamboa.easyspans.legacy.customspans.ClickableLinkSpan
 import com.mamboa.easyspans.legacy.customspans.TextCaseSpan
 import com.mamboa.easyspans.legacy.styling.SpanFactory
+import java.util.Collections
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Represents a rich occurrence styling chunk, with configuration for spans and link handling.
  * Requires targetTextView at construction, ensuring no lateinit or null issues.
+ *
+ * @property location The location of the occurrence in the text.
+ * @property builder Optional builder for configuring styles and spans.
  */
 class OccurrenceChunk(
     val location: OccurrenceLocation,
@@ -30,11 +35,14 @@ class OccurrenceChunk(
     }
 
     // Encapsulate mutability, expose as read-only views
-    private val _characterStyleSpans = hashMapOf<String, (Any) -> CharacterStyle>()
-    val characterStyleSpans: Map<String, (Any) -> CharacterStyle> get() = _characterStyleSpans
+    private val _characterStyleSpans = ConcurrentHashMap<String, (Any) -> CharacterStyle>()
+    val characterStyleSpans: Map<String, (Any) -> CharacterStyle>
+        get() = Collections.unmodifiableMap(_characterStyleSpans)
 
-    private val _paragraphStyleSpans = hashMapOf<String, (Any) -> ParagraphStyle?>()
-    val paragraphStyleSpans: Map<String, (Any) -> ParagraphStyle?> get() = _paragraphStyleSpans
+    private val _paragraphStyleSpans = ConcurrentHashMap<String, (Any) -> ParagraphStyle?>()
+    val paragraphStyleSpans: Map<String, (Any) -> ParagraphStyle?>
+        get() = Collections.unmodifiableMap(_paragraphStyleSpans)
+
 
     fun getOccurrenceType(key: String): OccurrenceType {
         return if (builder == null)
