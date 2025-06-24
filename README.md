@@ -15,8 +15,8 @@ Add the following to your project’s `build.gradle`:
 
 ```kotlin
 dependencies {
-    implementation(project("com.github.maxime-kouemo.EasySpans:compose:1.0.8"))
-    implementation(project("com.github.maxime-kouemo.EasySpans:legacy:1.0.8"))
+    implementation(project("com.github.maxime-kouemo.EasySpans:compose:1.0.9"))
+    implementation(project("com.github.maxime-kouemo.EasySpans:legacy:1.0.9"))
 }
 ```
 
