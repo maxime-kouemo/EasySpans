@@ -10,7 +10,7 @@ The `EasySpans` library provides a flexible and chainable API for applying Andro
 Add to your `build.gradle`:
 ```kotlin
 dependencies { 
-    implementation("com.github.maxime-kouemo.EasySpans:legacy:1.0.0") 
+    implementation("com.github.maxime-kouemo.EasySpans:legacy:1.0.8") 
 }
 ```
 Add the Maven repository to your `settings.gradle`:

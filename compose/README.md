@@ -10,7 +10,7 @@
 Add to your `build.gradle`:
 ```kotlin
 dependencies { 
-    implementation("com.github.maxime-kouemo.EasySpans:compose:1.0.0") // temporary, will be moved to maven central
+    implementation("com.github.maxime-kouemo.EasySpans:compose:1.0.8") // temporary, will be moved to maven central
 }
 ```
 Add the Maven repository to your `settings.gradle`:
