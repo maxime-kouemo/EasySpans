@@ -21,7 +21,7 @@ enum class DashPattern {
 }
 
 @Composable
-fun DashedDecorationText(
+internal fun DashedDecorationText(
     text: String,
     modifier: Modifier = Modifier,
     dashedUnderline: Boolean = false,

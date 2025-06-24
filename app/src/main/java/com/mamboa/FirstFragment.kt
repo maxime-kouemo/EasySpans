@@ -9,6 +9,7 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.MaskFilterSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.SuperscriptSpan
+import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -63,7 +64,7 @@ class FirstFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        test1()
+        test2()
 
         binding.buttonFirst.setOnClickListener {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
@@ -224,6 +225,40 @@ class FirstFragment : Fragment() {
 //                .setTextStyle(Typeface.BOLD)
                 .setTextSize(R.dimen.test_default_text_size)
 //                .setFont(R.font.ocean_summer)
+                .build()
+                .create()
+    }
+
+    fun test2() {
+        val text = "Praesent tempus nibh ac ante aliquet suscipit. Praesent ex lectus, dapibus non porttitor id, aliquet nec sem."
+        val tempus = "tempus"
+        val blurMask = BlurMaskFilter(5f, BlurMaskFilter.Blur.NORMAL)
+        binding.textviewFirst.text =
+            EasySpans.Builder(requireContext(), text, binding.textviewFirst)
+                .addSpan { UnderlineSpan()  }
+                .setOccurrenceChunks(
+                    OccurrenceChunk(
+                        location = OccurrenceLocation(
+                            DelimitationType.REGEX(tempus),
+                            OccurrencePosition.All
+                        ),
+                        builder = OccurrenceChunkBuilder()
+                            .setColor(android.R.color.holo_red_dark)
+                            .addSpan { StrikethroughSpan() }
+                            .addSpan { MaskFilterSpan(blurMask) }
+                            .setOnLinkClickListener(
+                                object : ClickableLinkSpan.OnLinkClickListener {
+                                    override fun onLinkClick(view: View) {
+                                        Snackbar.make(
+                                            binding.root,
+                                            "$tempus clicked",
+                                            Snackbar.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            ),
+                    )
+                )
                 .build()
                 .create()
     }

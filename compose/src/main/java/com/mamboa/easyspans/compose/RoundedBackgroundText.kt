@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun RoundedBackgroundText(
+internal fun RoundedBackgroundText(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color,
