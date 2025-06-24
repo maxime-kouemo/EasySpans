@@ -9,8 +9,8 @@ The `EasySpans` library provides a flexible and chainable API for applying Andro
 ## Setup
 Add to your `build.gradle`:
 ```kotlin
-dependencies { 
-    implementation("com.github.maxime-kouemo.EasySpans:legacy:1.0.8") 
+dependencies {
+  implementation("com.github.maxime-kouemo.EasySpans:legacy:1.0.8")
 }
 ```
 Add the Maven repository to your `settings.gradle`:
@@ -40,13 +40,12 @@ Key features:
 
 ## Usage
 
-The `EasySpans` API centers around the `EasySpans.Builder` class, which takes a `Context`, the input text, and a `TextView` as parameters. The builder allows chaining methods to configure spans, followed by `build()` and `create()` to generate a `Spanned` object.
+The `EasySpans` API centers around the `EasySpans.Builder` class, which takes a `Context`, the input text, and an optional `TextView` as parameters. The builder allows chaining methods to configure spans, followed by `build()` and `create()` to generate a `Spanned` object.
 
 ### Basic Example
 Apply bold text, a teal color, and an underline to the entire text:
-
 ```kotlin
-val spanned = EasySpans.Builder(context, text, textView)
+val spanned = EasySpans.Builder(context, text)
     .setTextStyle(Typeface.BOLD)
     .setColor(R.color.teal_700)
     .isUnderlined()
@@ -56,11 +55,20 @@ val spanned = EasySpans.Builder(context, text, textView)
 textView.text = spanned
 ```
 
+Apply a custom `StrikethroughSpan` to the entire text using `addSpan`:
+```kotlin
+val spanned = EasySpans.Builder(context, text)
+    .addSpan { StrikethroughSpan() }
+    .build()
+    .create() as Spanned
+
+textView.text = spanned
+```
+
 ### Targeting Specific Text
 Apply an underline to the third word (delimited by spaces):
-
 ```kotlin
-val spanned = EasySpans.Builder(context, text, textView)
+val spanned = EasySpans.Builder(context, text)
     .setOccurrenceLocation(
         OccurrenceLocation(
             DelimitationType.BOUNDARY(" "),
@@ -74,7 +82,6 @@ val spanned = EasySpans.Builder(context, text, textView)
 
 ### Clickable Link Example
 Make the first occurrence of "ipsum" clickable with a purple color:
-
 ```kotlin
 val spanned = EasySpans.Builder(context, text, textView)
     .setOccurrenceChunks(
@@ -112,6 +119,7 @@ The `EasySpans.Builder` class provides the following methods for configuring spa
   - `setParagraphBackgroundColor(bg: SequenceBackgroundColor)`: Applies a `PaddingBackgroundColorSpan` with padding and gravity.
   - `setStyle(@StyleRes styleRes: Int)`: Applies a `TextAppearanceSpan`.
   - `setScriptType(type: ScriptType)`: Applies `SubscriptSpan` or `SuperscriptSpan` (e.g., `ScriptType.SUB`).
+  - `addSpan(span: (Any) -> Any)`: Applies a custom span (e.g., `StrikethroughSpan`, `MaskFilterSpan`). Cannot be used with `ClickableLinkSpan` or `URLSpan`; use `setOnLinkClickListener` instead.
 
 - **Localized Spans**:
   - `setOccurrenceLocation(location: OccurrenceLocation)`: Targets specific text portions for spans based on `DelimitationType` (`BOUNDARY` or `REGEX`) and `OccurrencePosition` (`First`, `Last`, `Nth`, `Indices`, `All`).
@@ -119,9 +127,9 @@ The `EasySpans.Builder` class provides the following methods for configuring spa
 
 ### OccurrenceChunkBuilder
 The `OccurrenceChunkBuilder` class configures spans for specific text portions within an `OccurrenceChunk`. It supports all global span methods plus:
-
 - `setOnLinkClickListener(listener: ClickableLinkSpan.OnLinkClickListener)`: Makes the chunk clickable with a `ClickableLinkSpan`.
 - `setChunkBackgroundColor(@ColorRes colorRes: Int)`: Applies a `BackgroundColorSpan` to the chunk.
+- `addSpan(span: (Any) -> Any)`: Applies a custom span. Throws an exception if used with `ClickableLinkSpan` or `URLSpan`.
 
 ### DelimitationType
 - `BOUNDARY(delimiter: String)`: Splits text by a delimiter (e.g., spaces, commas).
@@ -139,7 +147,6 @@ The `OccurrenceChunkBuilder` class configures spans for specific text portions w
 
 #### DelimitationType
 Specifies how text should be delimited for span operations:
-
 - **REGEX**: Matches text using a regular expression; spans are applied to each regex match.
   - **Example**: For `val sentence = "The cat stole the bacon, but the cat returned."` and `val value = "cat"`, a regex pattern `"cat"` identifies matches at positions 4-6 (`"cat"` in `"The cat"`) and 25-27 (`"cat"` in `"the cat"`). Styles are applied to these matches based on the specified `OccurrencePosition`.
   - **OccurrencePosition for REGEX**:
@@ -153,7 +160,6 @@ Specifies how text should be delimited for span operations:
       - **Example**: With regex `"cat"`, styles both `"cat"` instances at 4-6 and 25-27.
     - `Last`: The last regex match.
       - **Example**: With regex `"cat"`, styles `"cat"` at 25-27.
-
 - **BOUNDARY**: Splits text by a boundary string; spans are applied to the segments between delimiters (not the delimiters themselves).
   - **Example**: Using the same sentence with a boundary `" "`, splits into segments: `"The"`, `"cat"`, `"stole"`, `"the"`, `"bacon,"`, `"but"`, `"the"`, `"cat"`, `"returned."`. Styles are applied to these segments based on the specified `OccurrencePosition`.
   - **OccurrencePosition for BOUNDARY**:
@@ -182,14 +188,15 @@ This combination allows precise control over which parts of the text receive sty
 - **Invalid Occurrence Indices**: Ignores invalid indices (e.g., negative or out-of-bounds) and applies spans only to valid indices.
 - **Empty Regex or Delimiter**: No spans are applied for empty regex or delimiter.
 - **Concurrent Access**: Thread-safe for span creation and click handling.
+- **Invalid Custom Spans**: Throws `IllegalArgumentException` if `ClickableLinkSpan` or `URLSpan` is used with `addSpan`. Use `setOnLinkClickListener` instead.
 
 ## Testing Insights
 The `EasySpans` library is validated through extensive unit tests, ensuring robust functionality across various use cases. These tests confirm correct span application for global and localized styling, proper handling of regex and delimiter-based targeting, and reliable clickable link behavior. Edge cases, such as empty inputs, invalid regex patterns, and concurrent access, are rigorously tested to guarantee stability and performance in real-world applications.
 
 ## Limitations
 - **API Level Dependency**: `TypefaceSpan` with custom fonts requires API 28+.
-- **TextCaseSpan Behavior**: adds no span at all. Only the text case (upperCase, lowerCase, Capitalize, etc.) is applied to the chunk of the text, affecting span counts.
-- **TextView Dependency**: Requires a non-null `TextView` for some operations (setParagraphBackground, and ClickableLinkSpan).
+- **TextCaseSpan Behavior**: Adds no span; only the text case (e.g., uppercase, lowercase) is applied, affecting span counts.
+- **TextView Dependency**: Requires a non-null `TextView` for operations involving `setParagraphBackground` or `ClickableLinkSpan`.
 - **No Formatted String Support**: Does not handle string resource formatting (e.g., `%s`).
 
 ## Best Practices
@@ -198,14 +205,14 @@ The `EasySpans` library is validated through extensive unit tests, ensuring robu
 - Optimize for large texts by limiting chunks or regex complexity.
 - Test concurrent scenarios for click handlers.
 - Preserve `TextView` state when reapplying spans.
+- Use `setOnLinkClickListener` for clickable behavior instead of `ClickableLinkSpan` or `URLSpan` in `addSpan`.
 
 ## Example Scenarios
 
 ### 1. Global Styling
 Apply uniform styles to the entire text, including color, size, font style, and text case:
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor")
     .setColor(R.color.teal_700)
     .setTextSize(R.dimen.test_default_text_size)
     .setTextStyle(Typeface.BOLD_ITALIC)
@@ -218,9 +225,8 @@ textView.text = spanned
 
 ### 2. Styling a Specific Occurrence
 Style the third word in the text, split by spaces, with an underline:
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor sit amet", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor sit amet")
     .setOccurrenceLocation(
         OccurrenceLocation(
             DelimitationType.BOUNDARY(" "),
@@ -236,7 +242,6 @@ textView.text = spanned
 
 ### 3. Clickable Link with Regex
 Make the last occurrence of "nec" in a text clickable and styled with a specific color:
-
 ```kotlin
 val spanned = EasySpans.Builder(context, text, textView)
     .setOccurrenceChunks(
@@ -262,9 +267,8 @@ textView.text = spanned
 
 ### 4. Styling All Regex Matches
 Apply underline, strikethrough, and uppercase transformation to all occurrences of "nec":
-
 ```kotlin
-val spanned = EasySpans.Builder(context, text, textView)
+val spanned = EasySpans.Builder(context, text)
     .setOccurrenceLocation(
         OccurrenceLocation(
             DelimitationType.REGEX("nec"),
@@ -282,7 +286,6 @@ textView.text = spanned
 
 ### 5. Multiple Occurrence Chunks with Different Styles
 Apply different styles and clickable links to three distinct text segments: the first "nec" (regex), the second word (delimiter), and all "tempus" occurrences (regex):
-
 ```kotlin
 val spanned = EasySpans.Builder(context, text, textView)
     .setOccurrenceChunks(
@@ -326,9 +329,8 @@ textView.text = spanned
 
 ### 6. Highlight Monetary Values
 Highlight all monetary values (e.g., `5 $`, `$10.50`):
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Price: $10.50, 5 $", textView)
+val spanned = EasySpans.Builder(context, "Price: $10.50, 5 $")
     .setOccurrenceChunks(
         OccurrenceChunk(
             location = OccurrenceLocation(
@@ -346,7 +348,6 @@ textView.text = spanned
 
 ### 7. Create a Clickable Glossary
 Make all occurrences of "consectetur" and "Donec" clickable:
-
 ```kotlin
 val spanned = EasySpans.Builder(context, text, textView)
     .setOccurrenceChunks(
@@ -370,16 +371,15 @@ val spanned = EasySpans.Builder(context, text, textView)
         )
     )
     .build()
-    .create() as Spanned
+    .create() as Spanded
 
 textView.text = spanned
 ```
 
 ### 8. Style a Specific Word
 Apply bold and a larger size to the second occurrence of "ipsum":
-
 ```kotlin
-val spanned = EasySpans.Builder(context, text, textView)
+val spanned = EasySpans.Builder(context, text)
     .setOccurrenceLocation(
         OccurrenceLocation(DelimitationType.REGEX("ipsum"), OccurrencePosition.Nth(1))
     )
@@ -393,25 +393,23 @@ textView.text = spanned
 
 ### 9. Bold and Color a Specific Word
 Apply bold style and purple color to the word "ipsum":
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor")
     .setOccurrenceLocation(
         OccurrenceLocation(DelimitationType.REGEX("ipsum"), OccurrencePosition.First)
     )
     .setTextStyle(Typeface.BOLD)
     .setColor(R.color.purple_500)
     .build()
-    .create() as Spanded
+    .create() as Spanned
 
 textView.text = spanned
 ```
 
 ### 10. Underline and Color Multiple Words
 Underline and color all occurrences of "ipsum" and "dolor" in teal:
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor ipsum", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor ipsum")
     .setOccurrenceChunks(
         OccurrenceChunk(
             location = OccurrenceLocation(DelimitationType.REGEX("ipsum"), OccurrencePosition.All),
@@ -434,7 +432,6 @@ textView.text = spanned
 
 ### 11. Make Words Clickable
 Make the first occurrence of "ipsum" clickable with a purple color:
-
 ```kotlin
 val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
     .setOccurrenceChunks(
@@ -457,9 +454,8 @@ textView.text = spanned
 
 ### 12. Combine Multiple Styles
 Apply bold, underline, teal color, and larger size to the first occurrence of "dolor":
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor")
     .setOccurrenceLocation(
         OccurrenceLocation(DelimitationType.REGEX("dolor"), OccurrencePosition.First)
     )
@@ -475,9 +471,8 @@ textView.text = spanned
 
 ### 13. Case-Insensitive Matching
 Underline the first occurrence of "lorem" (case-insensitive):
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor")
     .setOccurrenceLocation(
         OccurrenceLocation(DelimitationType.REGEX("(?i)lorem"), OccurrencePosition.First)
     )
@@ -490,9 +485,8 @@ textView.text = spanned
 
 ### 14. Highlight Email Addresses
 Color all email addresses in a text purple:
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Contact: user1@domain.com, user2@sub.domain.org", textView)
+val spanned = EasySpans.Builder(context, "Contact: user1@domain.com, user2@sub.domain.org")
     .setOccurrenceChunks(
         OccurrenceChunk(
             location = OccurrenceLocation(
@@ -510,9 +504,8 @@ textView.text = spanned
 
 ### 15. Uppercase Transformation
 Transform the first occurrence of "ipsum" to uppercase and make it bold:
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor")
     .setOccurrenceLocation(
         OccurrenceLocation(DelimitationType.REGEX("ipsum"), OccurrencePosition.First)
     )
@@ -526,7 +519,6 @@ textView.text = spanned
 
 ### 16. Paragraph Background
 Apply a purple background with padding to the entire text:
-
 ```kotlin
 val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
     .setParagraphBackgroundColor(
@@ -544,9 +536,8 @@ textView.text = spanned
 
 ### 17. Subscript Text
 Apply subscript to the first occurrence of "dolor":
-
 ```kotlin
-val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
+val spanned = EasySpans.Builder(context, "Lorem ipsum dolor")
     .setOccurrenceLocation(
         OccurrenceLocation(DelimitationType.REGEX("dolor"), OccurrencePosition.First)
     )
@@ -557,46 +548,39 @@ val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
 textView.text = spanned
 ```
 
-### 18. Custom span .addSpan{}
-Since we didn't support all the available spans in the library, you can use the `addSpan` method to add any custom span you want. 
-For example, if you want to add a `MaskFilterSpan` with a `BlurMaskFilter`, you can do it like this (code example below).
-Now, keep in mind that if you call `addSpan` with a span that is already supported, (example: ```StrikethroughSpan```), and
-the supported span (example here: ```.isStrikeThrough()```) the one we support will supersede. Another thing is that we blocked
-spans like `ClickableSpan` and `URLSpan` from being added with `addSpan`, since we prefer their implementation in the library.
-On the example below, we will add a `MaskFilterSpan` with a `BlurMaskFilter` to the word "tempus" in the text, yet the rest of the text will be underlined.
-
+### 18. Custom Span with addSpan
+Since not all available spans are supported directly in the library, you can use the `addSpan` method to apply custom spans. For example, to add a `MaskFilterSpan` with a `BlurMaskFilter`, see the code below. Note that if you use `addSpan` with a span already supported by the library (e.g., `StrikethroughSpan` via `.isStrikeThrough()`), the library's implementation takes precedence. Additionally, `ClickableLinkSpan` and `URLSpan` are blocked in `addSpan` to enforce the use of `setOnLinkClickListener`. The example below applies a `MaskFilterSpan` with a `BlurMaskFilter` to all "tempus" occurrences, with the rest of the text underlined:
 ```kotlin
 val text = "Praesent tempus nibh ac ante aliquet suscipit. Praesent ex lectus, dapibus non porttitor id, aliquet nec sem."
 val tempus = "tempus"
 val blurMask = BlurMaskFilter(5f, BlurMaskFilter.Blur.NORMAL)
-val spanned =
-  EasySpans.Builder(requireContext(), text, binding.textviewFirst)
-    .addSpan { UnderlineSpan()  }
-    .setOccurrenceChunks(
-      OccurrenceChunk(
-        location = OccurrenceLocation(
-          DelimitationType.REGEX(tempus),
-          OccurrencePosition.All
-        ),
-        builder = OccurrenceChunkBuilder()
-          .setColor(android.R.color.holo_red_dark)
-          .addSpan { StrikethroughSpan() }
-          .addSpan { MaskFilterSpan(blurMask) }
-          .setOnLinkClickListener(
-            object : ClickableLinkSpan.OnLinkClickListener {
-              override fun onLinkClick(view: View) {
-                Snackbar.make(
-                  binding.root,
-                  "$tempus clicked",
-                  Snackbar.LENGTH_SHORT
-                ).show()
-              }
+val spanned = EasySpans.Builder(requireContext(), text, binding.textviewFirst)
+  .addSpan { UnderlineSpan() }
+  .setOccurrenceChunks(
+    OccurrenceChunk(
+      location = OccurrenceLocation(
+        DelimitationType.REGEX(tempus),
+        OccurrencePosition.All
+      ),
+      builder = OccurrenceChunkBuilder()
+        .setColor(android.R.color.holo_red_dark)
+        .addSpan { StrikethroughSpan() }
+        .addSpan { MaskFilterSpan(blurMask) }
+        .setOnLinkClickListener(
+          object : ClickableLinkSpan.OnLinkClickListener {
+            override fun onLinkClick(view: View) {
+              Snackbar.make(
+                binding.root,
+                "$tempus clicked",
+                Snackbar.LENGTH_SHORT
+              ).show()
             }
-          ),
-      )
+          }
+        )
     )
-    .build()
-    .create() as Spanned
+  )
+  .build()
+  .create() as Spanned
 
 textView.text = spanned
 ```
