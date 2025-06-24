@@ -557,6 +557,50 @@ val spanned = EasySpans.Builder(context, "Lorem ipsum dolor", textView)
 textView.text = spanned
 ```
 
+### 18. Custom span .addSpan{}
+Since we didn't support all the available spans in the library, you can use the `addSpan` method to add any custom span you want. 
+For example, if you want to add a `MaskFilterSpan` with a `BlurMaskFilter`, you can do it like this (code example below).
+Now, keep in mind that if you call `addSpan` with a span that is already supported, (example: ```StrikethroughSpan```), and
+the supported span (example here: ```.isStrikeThrough()```) the one we support will supersede. Another thing is that we blocked
+spans like `ClickableSpan` and `URLSpan` from being added with `addSpan`, since we prefer their implementation in the library.
+On the example below, we will add a `MaskFilterSpan` with a `BlurMaskFilter` to the word "tempus" in the text, yet the rest of the text will be underlined.
+
+```kotlin
+val text = "Praesent tempus nibh ac ante aliquet suscipit. Praesent ex lectus, dapibus non porttitor id, aliquet nec sem."
+val tempus = "tempus"
+val blurMask = BlurMaskFilter(5f, BlurMaskFilter.Blur.NORMAL)
+val spanned =
+  EasySpans.Builder(requireContext(), text, binding.textviewFirst)
+    .addSpan { UnderlineSpan()  }
+    .setOccurrenceChunks(
+      OccurrenceChunk(
+        location = OccurrenceLocation(
+          DelimitationType.REGEX(tempus),
+          OccurrencePosition.All
+        ),
+        builder = OccurrenceChunkBuilder()
+          .setColor(android.R.color.holo_red_dark)
+          .addSpan { StrikethroughSpan() }
+          .addSpan { MaskFilterSpan(blurMask) }
+          .setOnLinkClickListener(
+            object : ClickableLinkSpan.OnLinkClickListener {
+              override fun onLinkClick(view: View) {
+                Snackbar.make(
+                  binding.root,
+                  "$tempus clicked",
+                  Snackbar.LENGTH_SHORT
+                ).show()
+              }
+            }
+          ),
+      )
+    )
+    .build()
+    .create() as Spanned
+
+textView.text = spanned
+```
+
 For issues, feature requests, or contributions, refer to the project repository or contact the maintainers.
 
 ## License

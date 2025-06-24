@@ -1,5 +1,7 @@
 package com.mamboa.easyspans.legacy.helper
 
+import android.text.style.CharacterStyle
+import android.text.style.ParagraphStyle
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
@@ -8,6 +10,7 @@ import androidx.annotation.StyleRes
 import com.mamboa.easyspans.legacy.EasySpans
 import com.mamboa.easyspans.legacy.customspans.ClickableLinkSpan
 import com.mamboa.easyspans.legacy.customspans.TextCaseSpan
+import java.util.ArrayList
 
 /**
  * Collects per-chunk style configuration for use with OccurrenceChunk.
@@ -15,6 +18,7 @@ import com.mamboa.easyspans.legacy.customspans.TextCaseSpan
  * Intended for one-time use/configuration before passing to OccurrenceChunk.
  */
 class OccurrenceChunkBuilder {
+
     /** Color to apply to this chunk */
     @ColorRes
     var color: Int = EasySpans.Config.ID_NULL
@@ -69,6 +73,12 @@ class OccurrenceChunkBuilder {
     /** Target TextView for clickable links or paragraph background */
     var targetTextView: TextView? = null
         private set
+
+    /** Custom character styles to apply to this chunk */
+    var customCharacterStyles: ArrayList<(Any) -> CharacterStyle>? = null
+
+    /** Custom paragraph styles to apply to this chunk */
+    var customParagraphStyles: ArrayList<(Any) -> ParagraphStyle>? = null
 
     /**
      * Sets the color to apply to this chunk.
@@ -166,5 +176,37 @@ class OccurrenceChunkBuilder {
      */
     fun setTargetTextView(textView: TextView?) = apply {
         targetTextView = textView
+    }
+
+    /**
+     * Adds a custom character style to this chunk.
+     * @param style the character style to add
+     * @return this OccurrenceChunkBuilder instance
+     */
+    private fun addACharacterSpan(style: (Any) -> CharacterStyle) = apply {
+        if (customCharacterStyles == null) {
+            customCharacterStyles = ArrayList()
+        }
+        customCharacterStyles?.add(style)
+    }
+
+    /**
+     * Adds a custom paragraph style to this chunk.
+     * @param style the paragraph style to add
+     * @return this OccurrenceChunkBuilder instance
+     */
+    private fun addAParagraphSpan(style: (Any) -> ParagraphStyle) = apply {
+        if (customParagraphStyles == null) {
+            customParagraphStyles = ArrayList()
+        }
+        customParagraphStyles?.add(style)
+    }
+
+    fun addSpan(span: (Any) -> Any) = apply {
+        when (span(Any())) {
+            is CharacterStyle -> addACharacterSpan(span as (Any) -> CharacterStyle)
+            is ParagraphStyle -> addAParagraphSpan(span as (Any) -> ParagraphStyle)
+            else -> throw IllegalArgumentException("Span must produce a CharacterStyle or ParagraphStyle")
+        }
     }
 }

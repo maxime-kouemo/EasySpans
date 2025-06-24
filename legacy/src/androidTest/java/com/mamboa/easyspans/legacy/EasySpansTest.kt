@@ -1,6 +1,8 @@
 package com.mamboa.easyspans.legacy
 
 import android.content.Context
+import android.graphics.BlurMaskFilter
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.text.SpannableStringBuilder
@@ -8,9 +10,11 @@ import android.text.Spanned
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.MaskFilterSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.SubscriptSpan
+import android.text.style.SuperscriptSpan
 import android.text.style.TextAppearanceSpan
 import android.text.style.TypefaceSpan
 import android.text.style.UnderlineSpan
@@ -164,7 +168,7 @@ class EasySpansTest {
     fun testDelimiterSuccess() {
         // apply elements to the third  word delimited by space
         val desiredWord = "dolor"
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.BOUNDARY(" "),
@@ -195,7 +199,7 @@ class EasySpansTest {
         // apply elements to the third  word delimited by space
         // trying to get a word with wrong position after delimiter split
         val desiredWord = "dolor"
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.BOUNDARY(" "),
@@ -227,7 +231,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, text)
 
         val occurrencePosition = 0
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.REGEX(regex),
@@ -267,7 +271,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, text)
 
         val occurrencePosition = 2
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.REGEX(regex),
@@ -308,7 +312,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, text)
 
         val occurrencePositionIndexes = arrayListOf(1, 5, 8)
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.REGEX(regex),
@@ -364,7 +368,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, text)
 
         val occurrencePosition = occurrenceBoundaries.size - 1
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.REGEX(regex),
@@ -402,7 +406,7 @@ class EasySpansTest {
     fun testRegexOccurrencePositionAll() {
         // when no occurrence is specified, all words matching the regex will get the span
         val regex = "nec"
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.REGEX(regex),
@@ -449,7 +453,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, text)
 
         // FIRST
-        val spannedFirst = EasySpans.Builder(context, text, TextView(context))
+        val spannedFirst = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.REGEX(regex),
@@ -540,7 +544,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getDelimiterSlicedOccurrencesBoundaries(delimiter, text)
 
         val desiredPosition = 0
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.BOUNDARY(delimiter),
@@ -587,7 +591,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getDelimiterSlicedOccurrencesBoundaries(delimiter, text)
 
         val nthPosition = 5
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.BOUNDARY(delimiter),
@@ -638,7 +642,7 @@ class EasySpansTest {
         val delimiter = "nec"
         val occurrenceBoundaries = getDelimiterSlicedOccurrencesBoundaries(delimiter, text)
 
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.BOUNDARY(delimiter),
@@ -716,7 +720,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getDelimiterSlicedOccurrencesBoundaries(delimiter, text)
 
         val lastPosition = occurrenceBoundaries.size - 1
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.BOUNDARY(delimiter),
@@ -759,7 +763,7 @@ class EasySpansTest {
         val delimiter = " "
         val occurrenceBoundaries = getDelimiterSlicedOccurrencesBoundaries(delimiter, text)
 
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.BOUNDARY(delimiter),
@@ -790,7 +794,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, text)
 
         val occurrencePosition = occurrenceBoundaries.size - 1
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text, textView)
             .isUnderlined()
             .setColor(R.color.teal_700)
             .setOccurrenceChunks(
@@ -801,9 +805,7 @@ class EasySpansTest {
                     ),
                     builder = OccurrenceChunkBuilder()
                         .setOnLinkClickListener(object : ClickableLinkSpan.OnLinkClickListener {
-                            override fun onLinkClick(view: View) {
-                                // get the click listener
-                            }
+                            override fun onLinkClick(view: View) {/* get the click listener */ }
                         })
                 )
             )
@@ -861,9 +863,7 @@ class EasySpansTest {
                         .setColor(R.color.teal_700)
                         .setOnLinkClickListener(
                             object : ClickableLinkSpan.OnLinkClickListener {
-                                override fun onLinkClick(view: View) {
-                                    // get the click listener
-                                }
+                                override fun onLinkClick(view: View) {/* get the click listener */ }
                             }
                         )
                 )
@@ -922,7 +922,7 @@ class EasySpansTest {
         val occurrencesBoundaries =
             ArrayList(occurrenceBoundaries1).apply { addAll(occurrenceBoundaries2) }
 
-        val spanned = EasySpans.Builder(context, text, TextView(context))
+        val spanned = EasySpans.Builder(context, text, textView)
             .setOccurrenceChunks(
                 OccurrenceChunk(
                     location = OccurrenceLocation(
@@ -930,9 +930,7 @@ class EasySpansTest {
                     ),
                     builder = OccurrenceChunkBuilder()
                         .setOnLinkClickListener(object : ClickableLinkSpan.OnLinkClickListener {
-                            override fun onLinkClick(view: View) {
-                                // get the click listener
-                            }
+                            override fun onLinkClick(view: View) {/* no-op */ }
                         })
                 ),
 
@@ -942,9 +940,7 @@ class EasySpansTest {
                     ),
                     builder = OccurrenceChunkBuilder()
                         .setOnLinkClickListener(object : ClickableLinkSpan.OnLinkClickListener {
-                            override fun onLinkClick(view: View) {
-                                // get the click listener
-                            }
+                            override fun onLinkClick(view: View) { /* no-op */ }
                         })
                 )
             )
@@ -992,7 +988,7 @@ class EasySpansTest {
         val typeFace = Typeface.ITALIC
         val colorRes = R.color.purple_500
 
-        val spanned = EasySpans.Builder(context, text, textView)
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceLocation(
                 OccurrenceLocation(
                     DelimitationType.REGEX(regex),
@@ -1052,8 +1048,7 @@ class EasySpansTest {
                         .isUnderlined() // Override default link underline
                         .setOnLinkClickListener(
                             object : ClickableLinkSpan.OnLinkClickListener {
-                                override fun onLinkClick(view: View) { /* no-op */
-                                }
+                                override fun onLinkClick(view: View) { /* no-op */ }
                             }
                         )
                 )
@@ -1175,8 +1170,7 @@ class EasySpansTest {
                     builder = OccurrenceChunkBuilder()
                         .setOnLinkClickListener(
                             object : ClickableLinkSpan.OnLinkClickListener {
-                                override fun onLinkClick(view: View) { /* no-op */
-                                }
+                                override fun onLinkClick(view: View) { /* no-op */ }
                             }
                         )
                 )
@@ -1218,8 +1212,7 @@ class EasySpansTest {
                     builder = OccurrenceChunkBuilder()
                         .setOnLinkClickListener(
                             object : ClickableLinkSpan.OnLinkClickListener {
-                                override fun onLinkClick(view: View) { /* no-op */
-                                }
+                                override fun onLinkClick(view: View) { /* no-op */ }
                             }
                         )
                 )
@@ -1254,8 +1247,7 @@ class EasySpansTest {
                     builder = OccurrenceChunkBuilder()
                         .setOnLinkClickListener(
                             object : ClickableLinkSpan.OnLinkClickListener {
-                                override fun onLinkClick(view: View) { /* no-op */
-                                }
+                                override fun onLinkClick(view: View) { /* no-op */ }
                             }
                         )
                 )
@@ -1321,8 +1313,7 @@ class EasySpansTest {
                         .setColor(R.color.purple_500)
                         .setOnLinkClickListener(
                             object : ClickableLinkSpan.OnLinkClickListener {
-                                override fun onLinkClick(view: View) { /* no-op */
-                                }
+                                override fun onLinkClick(view: View) { /* no-op */ }
                             }
                         )
                 ),
@@ -1458,8 +1449,7 @@ class EasySpansTest {
                     builder = OccurrenceChunkBuilder()
                         .setOnLinkClickListener(
                             object : ClickableLinkSpan.OnLinkClickListener {
-                                override fun onLinkClick(view: View) { /* no-op */
-                                }
+                                override fun onLinkClick(view: View) { /* no-op */ }
                             }
                         )
                 )
@@ -1491,8 +1481,7 @@ class EasySpansTest {
                 builder = OccurrenceChunkBuilder().setColor(R.color.teal_200)
                     .setOnLinkClickListener(
                         object : ClickableLinkSpan.OnLinkClickListener {
-                            override fun onLinkClick(view: View) { /* no-op */
-                            }
+                            override fun onLinkClick(view: View) { /* no-op */ }
                         }
                     )
             )
@@ -2144,23 +2133,26 @@ class EasySpansTest {
         }
     }
 
-    /*@Test
+    @Test
     fun testNullTextViewReference() {
         val regex = "dolor"
         val testText = "Lorem ipsum dolor"
 
         try {
-            val spanned = EasySpans.Builder(context, testText, null)
+            val spanned = EasySpans.Builder(context, testText)
                 .setOccurrenceChunks(
                     OccurrenceChunk(
                         location = OccurrenceLocation(
                             delimitationType = DelimitationType.REGEX(regex),
                             occurrencePosition = OccurrencePosition.First
                         ),
-                        onLinkClickListener = object : ClickableLinkSpan.OnLinkClickListener {
-                            override fun onLinkClick(view: View) { *//* no-op *//* }
-                        },
-                        targetTextView = null
+                        builder = OccurrenceChunkBuilder()
+                            .setColor(R.color.teal_700)
+                            .setOnLinkClickListener(
+                                object : ClickableLinkSpan.OnLinkClickListener {
+                                    override fun onLinkClick(view: View) { /* no-op */ }
+                                }
+                            )
                     )
                 )
                 .build()
@@ -2176,7 +2168,7 @@ class EasySpansTest {
             // Expected if EasySpans enforces non-null TextView
             Assert.assertTrue(true)
         }
-    }*/
+    }
 
     @Test
     fun testInvalidSpanConfigurations() {
@@ -2447,7 +2439,7 @@ class EasySpansTest {
         val initialEnabled = textView.isEnabled
 
         // Re-apply spans
-        val newSpanned = EasySpans.Builder(context, testText, textView)
+        val newSpanned = EasySpans.Builder(context, testText)
             .setOccurrenceChunks(
                 OccurrenceChunk(
                     location = OccurrenceLocation(
@@ -2474,7 +2466,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex1, text)
         Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
 
-        val spanned = EasySpans.Builder(context, text, textView)
+        val spanned = EasySpans.Builder(context, text)
             .setOccurrenceChunks(
                 OccurrenceChunk(
                     location = OccurrenceLocation(
@@ -2520,7 +2512,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, testText)
         Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
 
-        val spanned1 = EasySpans.Builder(context, testText, textView)
+        val spanned1 = EasySpans.Builder(context, testText)
             .setOccurrenceChunks(
                 OccurrenceChunk(
                     location = OccurrenceLocation(
@@ -2534,7 +2526,7 @@ class EasySpansTest {
             .create() as Spanned
 
         // Apply different span
-        val spanned2 = EasySpans.Builder(context, testText, textView)
+        val spanned2 = EasySpans.Builder(context, testText)
             .setOccurrenceChunks(
                 OccurrenceChunk(
                     location = OccurrenceLocation(
@@ -2568,7 +2560,7 @@ class EasySpansTest {
         val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, testText)
         Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
 
-        val spanned = EasySpans.Builder(context, testText, textView)
+        val spanned = EasySpans.Builder(context, testText)
             .setOccurrenceChunks(
                 OccurrenceChunk(
                     location = OccurrenceLocation(
@@ -2600,10 +2592,164 @@ class EasySpansTest {
         Assert.assertEquals(testText, spanned.toString())
     }
 
+    @Test
+    fun testAddSpanWithSingleCustomSpan() {
+        val testText = "Hello World"
+        val regex = "World"
+        val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, testText)
+        Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
+
+        val spanned = EasySpans.Builder(context, testText)
+            .setOccurrenceChunks(
+                OccurrenceChunk(
+                    location = OccurrenceLocation(
+                        delimitationType = DelimitationType.REGEX(regex),
+                        occurrencePosition = OccurrencePosition.First
+                    ),
+                    builder = OccurrenceChunkBuilder()
+                        .addSpan { StrikethroughSpan() }
+                )
+            )
+            .build()
+            .create() as SpannableStringBuilder
+
+        val strikeSpans = spanned.getSpans(
+            occurrenceBoundaries[0].first,
+            occurrenceBoundaries[0].last + 1,
+            StrikethroughSpan::class.java
+        )
+        Assert.assertEquals(1, strikeSpans.size)
+    }
+
+    @Test
+    fun testAddSpanWithMultipleCustomSpans() {
+        val testText = "Test Text"
+        val regex = "Text"
+        val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, testText)
+        Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
+
+        val spanned = EasySpans.Builder(context, testText)
+            .setOccurrenceChunks(
+                OccurrenceChunk(
+                    location = OccurrenceLocation(
+                        delimitationType = DelimitationType.REGEX(regex),
+                        occurrencePosition = OccurrencePosition.First
+                    ),
+                    builder = OccurrenceChunkBuilder()
+                        .addSpan { StrikethroughSpan() }
+                        .addSpan { SuperscriptSpan() }
+                        .addSpan { StyleSpan(Typeface.BOLD) }
+                )
+            )
+            .build()
+            .create() as SpannableStringBuilder
+
+        val start = occurrenceBoundaries[0].first
+        val end = occurrenceBoundaries[0].last + 1
+
+        Assert.assertEquals(1, spanned.getSpans(start, end, StrikethroughSpan::class.java).size)
+        Assert.assertEquals(1, spanned.getSpans(start, end, SuperscriptSpan::class.java).size)
+        Assert.assertEquals(1, spanned.getSpans(start, end, StyleSpan::class.java).size)
+    }
+
+    @Test
+    fun testAddSpanWithSpanRemoval() {
+        val testText = "Sample Text"
+        val regex = "Sample"
+        val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, testText)
+        Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
+
+        val spanned = EasySpans.Builder(context, testText)
+            .setOccurrenceChunks(
+                OccurrenceChunk(
+                    location = OccurrenceLocation(
+                        delimitationType = DelimitationType.REGEX(regex),
+                        occurrencePosition = OccurrencePosition.First
+                    ),
+                    builder = OccurrenceChunkBuilder()
+                        .setColor(R.color.teal_700)
+                        .addSpan { StrikethroughSpan() }
+                )
+            )
+            .build()
+            .create() as SpannableStringBuilder
+
+        val start = occurrenceBoundaries[0].first
+        val end = occurrenceBoundaries[0].last + 1
+
+        val strikeSpan = spanned.getSpans(start, end, StrikethroughSpan::class.java)[0]
+        spanned.removeSpan(strikeSpan)
+
+        Assert.assertEquals(0, spanned.getSpans(start, end, StrikethroughSpan::class.java).size)
+        Assert.assertEquals(1, spanned.getSpans(start, end, ForegroundColorSpan::class.java).size)
+    }
+
+    @Test
+    fun testCustomSpanWithBlurMask() {
+        val testText = "Lorem ipsum dolor"
+        val regex = "ipsum"
+        val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, testText)
+        Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
+
+        val blurMask = BlurMaskFilter(5f, BlurMaskFilter.Blur.NORMAL)
+        val spanned = EasySpans.Builder(context, testText)
+            .setOccurrenceChunks(
+                OccurrenceChunk(
+                    location = OccurrenceLocation(
+                        delimitationType = DelimitationType.REGEX(regex),
+                        occurrencePosition = OccurrencePosition.First
+                    ),
+                    builder = OccurrenceChunkBuilder()
+                        .addSpan { MaskFilterSpan(blurMask) }
+                )
+            )
+            .build()
+            .create() as SpannableStringBuilder
+
+        val maskSpans = spanned.getSpans(
+            occurrenceBoundaries[0].first,
+            occurrenceBoundaries[0].last + 1,
+            MaskFilterSpan::class.java
+        )
+        Assert.assertEquals(1, maskSpans.size)
+
+        // Note: Visual verification required for blur effect
+        Assert.assertEquals(testText, spanned.toString())
+    }
+
+    @Test
+    fun testCustomSpanWithMultipleEffects() {
+        val testText = "Sample Text"
+        val regex = "Text"
+        val occurrenceBoundaries = getRegexOccurrencesBoundaries(regex, testText)
+        Assert.assertTrue(occurrenceBoundaries.isNotEmpty())
+
+        val spanned = EasySpans.Builder(context, testText)
+            .setOccurrenceChunks(
+                OccurrenceChunk(
+                    location = OccurrenceLocation(
+                        delimitationType = DelimitationType.REGEX(regex),
+                        occurrencePosition = OccurrencePosition.First
+                    ),
+                    builder = OccurrenceChunkBuilder()
+                        .addSpan { StrikethroughSpan() }
+                        .addSpan { SuperscriptSpan() }
+                        .addSpan { ForegroundColorSpan(Color.RED) }
+                )
+            )
+            .build()
+            .create() as SpannableStringBuilder
+
+        val start = occurrenceBoundaries[0].first
+        val end = occurrenceBoundaries[0].last + 1
+
+        Assert.assertEquals(1, spanned.getSpans(start, end, StrikethroughSpan::class.java).size)
+        Assert.assertEquals(1, spanned.getSpans(start, end, SuperscriptSpan::class.java).size)
+        Assert.assertEquals(1, spanned.getSpans(start, end, ForegroundColorSpan::class.java).size)
+    }
 
     @After
-    fun teardown() {
-    }
+    fun teardown() {}
 
     private fun getRegexOccurrencesBoundaries(regex: String, text: String): List<IntRange> {
         return Regex(regex).findAll(text).map { it.range }.toList()

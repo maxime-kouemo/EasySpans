@@ -2,6 +2,8 @@ package com.mamboa.easyspans.legacy
 
 import android.content.Context
 import android.text.SpannableStringBuilder
+import android.text.style.CharacterStyle
+import android.text.style.ParagraphStyle
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
@@ -17,6 +19,7 @@ import com.mamboa.easyspans.legacy.helper.ScriptType
 import com.mamboa.easyspans.legacy.helper.SequenceBackgroundColor
 import com.mamboa.easyspans.legacy.styling.SpanFactory
 import com.mamboa.easyspans.legacy.styling.StyleApplier
+import java.util.ArrayList
 
 /**
  * EasySpans provides a fluent API for applying rich text styling to Android text.
@@ -28,7 +31,7 @@ import com.mamboa.easyspans.legacy.styling.StyleApplier
 class EasySpans private constructor(
     private val context: Context,
     private var charSequence: CharSequence,
-    private val targetTextView: TextView,
+    private val targetTextView: TextView? = null,
     private val config: Config
 ) {
     private val spanFactory = SpanFactory(context)
@@ -388,7 +391,9 @@ class EasySpans private constructor(
         val occurrenceLocation: OccurrenceLocation = OccurrenceLocation(
             DelimitationType.NONE,
             OccurrencePosition.All
-        )
+        ),
+        val customCharacterStyles: ArrayList<(Any) -> CharacterStyle>? = null,
+        val customParagraphStyles: ArrayList<(Any) -> ParagraphStyle>? = null,
     ) {
         companion object {
             const val ID_NULL = 0
@@ -413,7 +418,7 @@ class EasySpans private constructor(
      * Builder class for EasySpans.
      * This class provides a fluent API for configuring the EasySpans instance.
      */
-    class Builder(val context: Context, val charSequence: CharSequence, val targetTextView: TextView) {
+    class Builder(val context: Context, val charSequence: CharSequence, val targetTextView: TextView? = null) {
         private var color: Int = Config.ID_NULL
         private var chunkBackgroundColor: Int = Config.ID_NULL
         private var textSize: Int = Config.ID_NULL
@@ -428,6 +433,8 @@ class EasySpans private constructor(
         private var occurrenceChunks: Array<out OccurrenceChunk> = arrayOf()
         private var occurrenceLocation: OccurrenceLocation =
             OccurrenceLocation(DelimitationType.NONE, OccurrencePosition.All)
+        private var customCharacterStyles: ArrayList<(Any) -> CharacterStyle>? = null
+        private var customParagraphStyles: ArrayList<(Any) -> ParagraphStyle>? = null
 
         fun setColor(@ColorRes value: Int) = apply { color = value }
         fun setChunkBackgroundColor(@ColorRes value: Int) = apply { chunkBackgroundColor = value }
@@ -445,7 +452,30 @@ class EasySpans private constructor(
         fun setOccurrenceChunks(vararg value: OccurrenceChunk) = apply {
             occurrenceChunks = value
         }
+
         fun setOccurrenceLocation(value: OccurrenceLocation) = apply { occurrenceLocation = value }
+
+        private fun addACharacterSpan(style: (Any) -> CharacterStyle) = apply {
+            if (customCharacterStyles == null) {
+                customCharacterStyles = ArrayList()
+            }
+            customCharacterStyles?.add(style)
+        }
+
+        private fun addCustomParagraphStyle(style: (Any) -> ParagraphStyle) = apply {
+            if (customParagraphStyles == null) {
+                customParagraphStyles = ArrayList()
+            }
+            customParagraphStyles?.add(style)
+        }
+
+        fun addSpan(span: (Any) -> Any) = apply {
+            when (val result = span(Any())) {
+                is CharacterStyle -> addACharacterSpan { _ -> result }
+                is ParagraphStyle -> addCustomParagraphStyle { _ -> result }
+                else -> throw IllegalArgumentException("Span must produce a CharacterStyle or ParagraphStyle")
+            }
+        }
 
         fun build(): EasySpans {
             val config = Config(
@@ -461,7 +491,9 @@ class EasySpans private constructor(
                 paragraphBackgroundColor = paragraphBackgroundColor,
                 textCaseType = textCaseType,
                 occurrenceChunks = occurrenceChunks,
-                occurrenceLocation = occurrenceLocation
+                occurrenceLocation = occurrenceLocation,
+                customCharacterStyles = customCharacterStyles,
+                customParagraphStyles = customParagraphStyles
             )
             return EasySpans(context, charSequence, targetTextView, config)
         }

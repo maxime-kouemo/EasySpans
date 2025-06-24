@@ -4,24 +4,26 @@ import android.content.Context
 import android.os.Build
 import android.text.SpannableStringBuilder
 import android.text.style.CharacterStyle
+import android.text.style.ClickableSpan
 import android.text.style.ParagraphStyle
+import android.text.style.URLSpan
+import android.util.Log
 import android.widget.TextView
 import com.mamboa.easyspans.legacy.EasySpans
+import com.mamboa.easyspans.legacy.customspans.ClickableLinkSpan
+import com.mamboa.easyspans.legacy.customspans.PaddingBackgroundColorSpan
 import com.mamboa.easyspans.legacy.customspans.TextCaseSpan
 import com.mamboa.easyspans.legacy.helper.DelimitationType
 import com.mamboa.easyspans.legacy.helper.OccurrenceChunk
 import com.mamboa.easyspans.legacy.helper.OccurrenceType
 import com.mamboa.easyspans.legacy.helper.ScriptType
 import com.mamboa.easyspans.legacy.styling.SpanFactory.Companion.setCustomSpan
+import java.util.UUID
 
-/**
- * Applies styles to text spans based on the provided configuration.
- * Handles both character and paragraph styles, including occurrence chunks.
- */
 class StyleApplier(
     private val config: EasySpans.Config,
     private val context: Context,
-    private val targetTextView: TextView,
+    private val targetTextView: TextView? = null,
     private val spanFactory: SpanFactory
 ) : SpanApplier {
 
@@ -29,7 +31,12 @@ class StyleApplier(
     private val mapOfParagraphStyleSpans = linkedMapOf<String, (Any) -> ParagraphStyle?>()
     private val occurrenceChunksTags = arrayListOf<String>()
     private val occurrenceChunksDetails = arrayListOf<OccurrenceChunk>()
+    private val builtChunks = hashSetOf<Int>() // Track built chunks by index
 
+    /**
+     * Prepares the spans based on the provided configuration.
+     * This method sets up the base spans and occurrence chunks that will be applied later.
+     */
     override fun prepareSpans() {
         setupBaseSpans(config)
         setupOccurrenceChunks(config.occurrenceChunks)
@@ -37,7 +44,10 @@ class StyleApplier(
 
     /**
      * Returns the tag for the occurrence chunk at the specified index.
-     * If the index is out of bounds, returns an empty string.
+     * If the index is out of bounds, it returns an empty string.
+     *
+     * @param index The index of the occurrence chunk tag to retrieve.
+     * @return The tag for the occurrence chunk, or an empty string if the index is invalid.
      */
     fun getOccurrenceChunkTag(index: Int): String {
         return if (index < occurrenceChunksTags.size) {
@@ -47,10 +57,23 @@ class StyleApplier(
         }
     }
 
+    /**
+     * Checks if there are any spans to apply.
+     * This is useful to avoid unnecessary processing when no styles are defined.
+     *
+     * @return true if there are spans, false otherwise.
+     */
     fun hasSpans(): Boolean {
-        return mapOfCharacterStyleSpans.isNotEmpty() || mapOfParagraphStyleSpans.isNotEmpty()
+        return mapOfCharacterStyleSpans.isNotEmpty() || mapOfParagraphStyleSpans.isNotEmpty() ||
+                occurrenceChunksTags.isNotEmpty() || occurrenceChunksDetails.isNotEmpty()
     }
 
+    /**
+     * Sets up the base spans based on the provided configuration.
+     * It populates the maps with character and paragraph style spans.
+     *
+     * @param config The configuration containing styling options.
+     */
     private fun setupBaseSpans(config: EasySpans.Config) {
         if (config.textCaseType != TextCaseSpan.TextCaseType.NORMAL && spanFactory.authorizedTextCases.contains(
                 config.textCaseType
@@ -94,8 +117,10 @@ class StyleApplier(
         when (config.scriptType) {
             ScriptType.SUPER -> mapOfCharacterStyleSpans[EasySpans.Config.SUPER_SCRIPT_TAG] =
                 { spanFactory.createSuperScriptCharStyle() }
+
             ScriptType.SUB -> mapOfCharacterStyleSpans[EasySpans.Config.SUB_SCRIPT_TAG] =
                 { spanFactory.createSubScriptCharStyle() }
+
             else -> {}
         }
         config.paragraphBackgroundColor?.let { bg ->
@@ -103,18 +128,49 @@ class StyleApplier(
                 spanFactory.createBackgroundParagraphStyle(bg, targetTextView)
             }
         }
+        config.customCharacterStyles?.forEach { value ->
+            val sampleSpan = try {
+                value(Any())
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Invalid custom character style: ${e.message}")
+            }
+            if (sampleSpan is ClickableLinkSpan || sampleSpan is ClickableSpan) {
+                throw IllegalArgumentException("Custom character styles cannot include ClickableLinkSpan or URLSpan. Use OccurrenceChunkBuilder.setOnLinkClickListener for clickable behavior.")
+            }
+            val key = UUID.randomUUID().toString()
+            mapOfCharacterStyleSpans[key] = value
+        }
+        config.customParagraphStyles?.forEach { value ->
+            val sampleSpan = try {
+                value(Any())
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Invalid custom paragraph style: ${e.message}")
+            }
+            if (sampleSpan is PaddingBackgroundColorSpan && targetTextView == null) {
+                throw NullPointerException("targetTextView must be provided when using PaddingBackgroundColorSpan in custom paragraph styles.")
+            }
+            val key = UUID.randomUUID().toString()
+            mapOfParagraphStyleSpans[key] = value
+        }
     }
 
+    /**
+     * Sets up the occurrence chunks by adding their tags and details to the respective lists.
+     * It also builds each chunk once during setup to avoid repeated building later.
+     *
+     * @param chunks The array of occurrence chunks to set up.
+     */
     private fun setupOccurrenceChunks(chunks: Array<out OccurrenceChunk>) {
         if (chunks.isEmpty()) return
-
         occurrenceChunksTags.ensureCapacity(chunks.size * 2)
         occurrenceChunksDetails.ensureCapacity(chunks.size * 2)
-
         chunks.forEachIndexed { index, span ->
             val key = "${EasySpans.Config.CLICKABLE_LINK_TAG}$index"
             occurrenceChunksTags.add(key)
             occurrenceChunksDetails.add(span)
+            // Build chunk once during setup
+            span.build(context, targetTextView)
+            builtChunks.add(index)
         }
     }
 
@@ -135,7 +191,6 @@ class StyleApplier(
                     builder.setSpan(value(key), startIndex, endIndex, 0)
                 }
             }
-
             is OccurrenceType.INDEPENDENT -> {
                 if (occurrenceChunksTags.contains(occurrenceType.key)) {
                     val position = occurrenceChunksTags.indexOf(occurrenceType.key)
@@ -143,27 +198,18 @@ class StyleApplier(
                     val isValidBoundaryPosition = isLinkValidBoundaryPosition(subsequence, position, boundaries)
                     if (isValidBoundaryPosition || isValidRegexPosition) {
                         val currentLinkDetails = occurrenceChunksDetails[position]
-                        currentLinkDetails.build(context, targetTextView)
+                        // Build was called in setupOccurrenceChunks
                         currentLinkDetails.characterStyleSpans.forEach { (key, value) ->
                             builder.setCustomSpan(key, value(key), startIndex, endIndex)
                         }
                         currentLinkDetails.paragraphStyleSpans.forEach { (key, value) ->
                             builder.setSpan(value(key), startIndex, endIndex, 0)
                         }
-                        currentLinkDetails.cleanUp()
                     }
                 }
             }
         }
     }
-
-    /*private fun isLinkValidRegexPosition(subsequence: CharSequence, position: Int): Boolean {
-        return occurrenceChunksDetails.size > position &&
-                occurrenceChunksDetails[position].location.delimitationType is DelimitationType.REGEX &&
-                (occurrenceChunksDetails[position].location.delimitationType as DelimitationType.REGEX).regex?.matches(
-                    subsequence
-                ) ?: false
-    }*/
 
     private fun isLinkValidRegexPosition(subsequence: CharSequence, position: Int): Boolean {
         if (occurrenceChunksDetails.size <= position) return false
@@ -172,18 +218,10 @@ class StyleApplier(
         val regex = (chunk.location.delimitationType as DelimitationType.REGEX).regex
         val isValid = regex?.find(subsequence) != null
         if (!isValid) {
-            println("Regex ${regex?.pattern} did not match subsequence: $subsequence")
+            Log.d("EasySpans", "Regex ${regex?.pattern} did not match subsequence: $subsequence")
         }
         return isValid
     }
-
-    /*private fun isLinkValidRegexPosition(subsequence: CharSequence, position: Int): Boolean {
-        return occurrenceChunksDetails.size > position &&
-                occurrenceChunksDetails[position].location.delimitationType is DelimitationType.REGEX &&
-                (occurrenceChunksDetails[position].location.delimitationType as DelimitationType.REGEX).regex?.find(
-                    subsequence
-                ) != null
-    }*/
 
     private fun isLinkValidBoundaryPosition(
         subsequence: CharSequence,
@@ -196,9 +234,11 @@ class StyleApplier(
     }
 
     override fun cleanup() {
+        occurrenceChunksDetails.forEach { it.cleanUp() }
         occurrenceChunksDetails.clear()
         occurrenceChunksTags.clear()
         mapOfParagraphStyleSpans.clear()
         mapOfCharacterStyleSpans.clear()
+        builtChunks.clear()
     }
 }

@@ -2,15 +2,22 @@ package com.mamboa.easyspans.compose
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.PlatformSpanStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.unit.TextUnit
 
 /**
@@ -24,7 +31,7 @@ sealed class OccurrencePosition {
     data object Last : OccurrencePosition()
     data object All : OccurrencePosition()
     data class Nth(val n: Int) : OccurrencePosition()
-    data class Indices(val indices: List<Int>) : OccurrencePosition(){
+    data class Indices(val indices: List<Int>) : OccurrencePosition() {
         constructor(vararg positions: Int) : this(positions.toList())
     }
 }
@@ -36,7 +43,19 @@ sealed class OccurrencePosition {
 @Stable
 sealed class DelimitationType {
     data class Boundary(val delimiter: String) : DelimitationType()
-    data class Regex(val pattern: String, val regex: kotlin.text.Regex = kotlin.text.Regex(pattern)) : DelimitationType()
+    data class Regex(
+        val pattern: String,
+        val regex: kotlin.text.Regex = kotlin.text.Regex(pattern)
+    ) : DelimitationType() {
+        constructor(pattern: String, options: Set<RegexOption>) : this(
+            pattern,
+            kotlin.text.Regex(pattern, options)
+        )
+        constructor(pattern: String, dotMatchesAll: RegexOption) : this(
+            pattern = pattern,
+            regex = kotlin.text.Regex(pattern, setOf(dotMatchesAll))
+        )
+    }
 }
 
 /**
@@ -88,7 +107,8 @@ enum class ScriptType {
  */
 @Stable
 class EasySpansComposeBuilder private constructor(
-    private val text: String
+    private val text: String,
+    private var spanStyle: SpanStyle = SpanStyle()
 ) {
     private var color: Color? = null
     private var backgroundColor: Color? = null
@@ -99,6 +119,18 @@ class EasySpansComposeBuilder private constructor(
     private var textDecoration: TextDecoration? = null
     private var textCase: ((String) -> String)? = null
     private var scriptType: ScriptType = ScriptType.NONE
+    private var brush: Brush? = null
+    private var alpha: Float = 1.0f
+    private var fontSynthesis: FontSynthesis? = null
+    private var fontFeatureSettings: String? = null
+    private var letterSpacing: TextUnit? = null
+    private var baselineShift: BaselineShift? = null
+    private var textGeometricTransform: TextGeometricTransform? = null
+    private var localeList: LocaleList? = null
+    private var shadow: Shadow? = null
+    private var platformStyle: PlatformSpanStyle? = null
+    private var drawStyle: DrawStyle? = null
+
     private val occurrenceChunks: MutableList<OccurrenceChunk> = mutableListOf()
     private var occLocation: OccurrenceLocation? = null
     private val spanStyles = mutableListOf<SpanBuilder>()
@@ -116,6 +148,18 @@ class EasySpansComposeBuilder private constructor(
     fun setFontStyle(style: FontStyle) = apply { this.fontStyle = style }
     fun setFontFamily(family: FontFamily) = apply { this.fontFamily = family }
     fun setTextDecoration(decoration: TextDecoration?) = apply { this.textDecoration = decoration }
+    fun setBrush(brush: Brush) = apply { this.brush = brush }
+    fun setAlpha(alpha: Float) = apply { this.alpha = alpha }
+    fun setFontSynthesis(synthesis: FontSynthesis) = apply { this.fontSynthesis = synthesis }
+    fun setFontFeatureSettings(settings: String) = apply { this.fontFeatureSettings = settings }
+    fun setLetterSpacing(spacing: TextUnit) = apply { this.letterSpacing = spacing }
+    fun setBaselineShift(shift: BaselineShift) = apply { this.baselineShift = shift }
+    fun setTextGeometricTransform(transform: TextGeometricTransform) =
+        apply { this.textGeometricTransform = transform }
+    fun setLocaleList(localeList: LocaleList) = apply { this.localeList = localeList }
+    fun setShadow(shadow: Shadow) = apply { this.shadow = shadow }
+    fun setPlatformStyle(style: PlatformSpanStyle) = apply { this.platformStyle = style }
+    fun setDrawStyle(style: DrawStyle) = apply { this.drawStyle = style }
     fun setTextCase(case: (String) -> String) = apply { this.textCase = case }
     fun setOccurrenceLocation(location: OccurrenceLocation) = apply { occLocation = location }
     fun addOccurrenceChunk(chunk: OccurrenceChunk) = apply { occurrenceChunks.add(chunk) }
@@ -125,34 +169,59 @@ class EasySpansComposeBuilder private constructor(
         occurrenceChunks.addAll(chunks)
     }
 
-    /**
-     * Builds the global SpanStyle based on the properties set in the builder.
-     *
-     * @return A SpanStyle that can be applied to the entire text.
-     */
-    private fun buildGlobalSpanStyle(): SpanStyle = SpanStyle(
-        color = color ?: Color.Unspecified,
-        fontSize = fontSize ?: TextUnit.Unspecified,
-        fontWeight = fontWeight ?: FontWeight.Normal,
-        fontStyle = fontStyle ?: FontStyle.Normal,
-        fontFamily = fontFamily,
-        baselineShift = when (scriptType) {
-            ScriptType.SUPER -> BaselineShift.Superscript
-            ScriptType.SUB -> BaselineShift.Subscript
-            ScriptType.NONE -> BaselineShift.None
-        },
-        textDecoration = textDecoration,
-        background = backgroundColor ?: Color.Unspecified
-    )
+    fun setSpanStyle(spanStyle: SpanStyle) = apply {
+        this.spanStyle = this.spanStyle.merge(spanStyle)
+        this.color = this.color ?: spanStyle.color.takeIf { it != Color.Unspecified }
+        this.backgroundColor = this.backgroundColor ?: spanStyle.background.takeIf { it != Color.Unspecified }
+        this.fontSize = this.fontSize ?: spanStyle.fontSize.takeIf { it != TextUnit.Unspecified }
+        this.fontWeight = this.fontWeight ?: spanStyle.fontWeight
+        this.fontStyle = this.fontStyle ?: spanStyle.fontStyle
+        this.fontFamily = this.fontFamily ?: spanStyle.fontFamily
+        this.textDecoration = this.textDecoration ?: spanStyle.textDecoration
+        this.fontSynthesis = this.fontSynthesis ?: spanStyle.fontSynthesis
+        this.fontFeatureSettings = this.fontFeatureSettings ?: spanStyle.fontFeatureSettings
+        this.letterSpacing = this.letterSpacing ?: spanStyle.letterSpacing.takeIf { it != TextUnit.Unspecified }
+        this.baselineShift = this.baselineShift ?: spanStyle.baselineShift
+        this.textGeometricTransform = this.textGeometricTransform ?: spanStyle.textGeometricTransform
+        this.localeList = this.localeList ?: spanStyle.localeList
+        this.shadow = this.shadow ?: spanStyle.shadow
+        this.platformStyle = this.platformStyle ?: spanStyle.platformStyle
+        this.drawStyle = this.drawStyle ?: spanStyle.drawStyle
+        this.brush = this.brush ?: spanStyle.brush
+        this.alpha = this.alpha.takeIf { it != 1.0f } ?: spanStyle.alpha.takeIf { it != 1.0f } ?: 1.0f
+        this.scriptType = when (this.baselineShift) {
+            BaselineShift.Superscript -> ScriptType.SUPER
+            BaselineShift.Subscript -> ScriptType.SUB
+            else -> ScriptType.NONE
+        }
+    }
 
-    /**
-     * Adds a span style to the builder.
-     *
-     * @param start The starting index of the span.
-     * @param end The ending index of the span (exclusive).
-     * @param styleBuilder A function that builds the SpanStyle based on the base style.
-     * @param clickTag An optional tag for click events associated with this span.
-     */
+    private fun buildGlobalSpanStyle(): SpanStyle {
+        val individualStyle = SpanStyle(
+            color = color ?: Color.Unspecified,
+            background = backgroundColor ?: Color.Unspecified,
+            fontSize = fontSize ?: TextUnit.Unspecified,
+            fontWeight = fontWeight,
+            fontStyle = fontStyle,
+            fontFamily = fontFamily,
+            textDecoration = textDecoration,
+            fontSynthesis = fontSynthesis,
+            fontFeatureSettings = fontFeatureSettings,
+            letterSpacing = letterSpacing ?: TextUnit.Unspecified,
+            baselineShift = when (scriptType) {
+                ScriptType.SUPER -> BaselineShift.Superscript
+                ScriptType.SUB -> BaselineShift.Subscript
+                ScriptType.NONE -> baselineShift ?: BaselineShift.None
+            },
+            textGeometricTransform = textGeometricTransform,
+            localeList = localeList,
+            shadow = shadow,
+            platformStyle = platformStyle,
+            drawStyle = drawStyle,
+        )
+        return spanStyle.merge(individualStyle)
+    }
+
     private fun addSpanStyle(
         start: Int,
         end: Int,
@@ -166,12 +235,6 @@ class EasySpansComposeBuilder private constructor(
         }
     }
 
-    /**
-     * Builds the AnnotatedString with the applied styles and spans.
-     * It processes the occurrence chunks, applies styles, and handles text transformations.
-     *
-     * @return An AnnotatedString with the applied styles and spans.
-     */
     fun build(): AnnotatedString {
         var displayText = textCase?.invoke(this.text) ?: this.text
 
@@ -193,16 +256,8 @@ class EasySpansComposeBuilder private constructor(
             } else {
                 chunk
             }
-        }
+        }.toMutableList()
 
-        // Track annotations to ensure each range has at most one click tag
-        val existingAnnotations = mutableMapOf<IntRange, String>()
-
-        // Clear spanStyles and clickTags to avoid stale data
-        spanStyles.clear()
-        clickTags.clear()
-
-        // Process occLocation if present
         occLocation?.let { loc ->
             var finalLoc = loc
             if (textCase != null && loc.delimitationType is DelimitationType.Regex) {
@@ -215,19 +270,19 @@ class EasySpansComposeBuilder private constructor(
                     )
                 )
             }
-            val baseChunkForOccLocation = OccurrenceChunk(finalLoc)
-            processedOccurrenceChunks.toMutableList().apply { add(baseChunkForOccLocation) }
+            processedOccurrenceChunks.add(OccurrenceChunk(finalLoc))
         }
 
-        // Collect transformations to apply to displayText
+        val existingAnnotations = mutableMapOf<IntRange, String>()
+        spanStyles.clear()
+        clickTags.clear()
+
         val textTransformations = mutableListOf<Triple<Int, Int, String>>()
 
-        // Add styles and annotations for each chunk
         for (chunk in processedOccurrenceChunks) {
-            val ranges = getOccurrenceRanges(chunk.occurrenceLocation, displayText)
+            val ranges = Utils.getOccurrenceRanges(chunk.occurrenceLocation, displayText)
             for (range in ranges) {
                 val intRange = range.first until (range.last + 1)
-                // Add style and annotation if the range is not already annotated with a different tag
                 if (chunk.onClickTag == null || existingAnnotations[intRange]?.let { it == chunk.onClickTag } != false) {
                     addSpanStyle(
                         start = range.first,
@@ -236,16 +291,20 @@ class EasySpansComposeBuilder private constructor(
                         clickTag = chunk.onClickTag
                     )
 
-                    // Update annotation, allowing later chunks to override earlier ones
                     if (chunk.onClickTag != null) {
                         existingAnnotations[intRange] = chunk.onClickTag
                     }
 
-                    // Store text transformation when available
                     chunk.textTransform?.let { transform ->
                         val substring = displayText.substring(range.first, range.last + 1)
                         val transformedText = transform(substring)
-                        textTransformations.add(Triple(range.first, range.last + 1, transformedText))
+                        textTransformations.add(
+                            Triple(
+                                range.first,
+                                range.last + 1,
+                                transformedText
+                            )
+                        )
                     }
                 }
             }
@@ -269,28 +328,26 @@ class EasySpansComposeBuilder private constructor(
             if (baseStyle != SpanStyle()) {
                 addStyle(baseStyle, 0, displayText.length)
             }
-            // Sort spanStyles by start index to ensure correct order
-            //spanStyles.sortedBy { it.start }.forEach { spanBuilder ->
-            spanStyles.sortedWith(compareBy({ it.start }, { -spanStyles.indexOf(it) })).forEach { spanBuilder ->
-                val start = spanBuilder.start.coerceIn(0, displayText.length)
-                val end = spanBuilder.end.coerceIn(0, displayText.length)
-                if (start < end) {
-                    val style = spanBuilder.styleBuilder(baseStyle)
-                    addStyle(style, start, end)
-                    spanBuilder.clickTag?.let { tag ->
-                        val intRange = start until end
-                        // Only add annotation if this is the intended tag for the range
-                        if (existingAnnotations[intRange] == tag) {
-                            addStringAnnotation(
-                                tag = tag,
-                                annotation = displayText.substring(start, end),
-                                start = start,
-                                end = end
-                            )
+            spanStyles.sortedWith(compareBy({ it.start }, { -spanStyles.indexOf(it) }))
+                .forEach { spanBuilder ->
+                    val start = spanBuilder.start.coerceIn(0, displayText.length)
+                    val end = spanBuilder.end.coerceIn(0, displayText.length)
+                    if (start < end) {
+                        val style = spanBuilder.styleBuilder(baseStyle)
+                        addStyle(style, start, end)
+                        spanBuilder.clickTag?.let { tag ->
+                            val intRange = start until end
+                            if (existingAnnotations[intRange] == tag) {
+                                addStringAnnotation(
+                                    tag = tag,
+                                    annotation = displayText.substring(start, end),
+                                    start = start,
+                                    end = end
+                                )
+                            }
                         }
                     }
                 }
-            }
         }.also {
             spanStyles.clear()
             clickTags.clear()
@@ -298,46 +355,6 @@ class EasySpansComposeBuilder private constructor(
         }
     }
 
-    /**
-     * Gets the ranges of occurrences based on the specified location and text.
-     * It handles both boundary and regex delimitation types.
-     *
-     * @param location The occurrence location containing delimitation type and position.
-     * @param text The text in which to find occurrences.
-     * @return A list of IntRange representing the positions of occurrences in the text.
-     */
-    private fun getOccurrenceRanges(location: OccurrenceLocation, text: String): List<IntRange> {
-        val delim = location.delimitationType
-        val position = location.occurrencePosition
-        val ranges = when (delim) {
-            is DelimitationType.Boundary -> Utils.getBoundaryRanges(text, delim.delimiter)
-            is DelimitationType.Regex -> {
-                try {
-                    Utils.getRegexMatchRanges(text, delim.regex)
-                } catch (e: Exception) {
-                    // If regex is invalid, skip this chunk
-                    emptyList()
-                }
-            }
-        }
-        return when (position) {
-            is OccurrencePosition.All -> ranges
-            is OccurrencePosition.First -> ranges.take(1)
-            is OccurrencePosition.Last -> ranges.takeLast(1)
-            is OccurrencePosition.Nth -> ranges.getOrNull(position.n)?.let { listOf(it) } ?: emptyList()
-            is OccurrencePosition.Indices -> position.indices.mapNotNull { ranges.getOrNull(it) }
-        }
-    }
-
-    /**
-     * Adds a span style to the builder with the specified start and end indices,
-     * style builder function, and an optional click tag.
-     *
-     * @param start The starting index of the span.
-     * @param end The ending index of the span (exclusive).
-     * @param styleBuilder A function that builds the SpanStyle based on the base style.
-     * @param clickTag An optional tag for click events associated with this span.
-     */
     private data class SpanBuilder(
         val start: Int,
         val end: Int,
@@ -346,13 +363,6 @@ class EasySpansComposeBuilder private constructor(
     )
 }
 
-/**
- * Creates an AnnotatedString with easy spans using the provided text and builder.
- *
- * @param text The text to be styled.
- * @param builder A lambda to configure the EasySpansComposeBuilder.
- * @return An AnnotatedString with the applied styles and spans.
- */
 fun EasySpansCompose(
     text: String,
     builder: EasySpansComposeBuilder.() -> Unit
